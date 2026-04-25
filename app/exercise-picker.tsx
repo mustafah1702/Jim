@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
 import { TextField } from '@/components/TextField';
@@ -58,21 +59,38 @@ export default function ExercisePickerScreen() {
           styles.header,
           {
             paddingHorizontal: theme.spacing.lg,
+            paddingTop: theme.spacing.sm,
             paddingBottom: theme.spacing.md,
             borderBottomColor: theme.colors.border,
+            backgroundColor: theme.colors.background,
           },
         ]}
       >
-        <Text variant="title">Add Exercise</Text>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+        <View style={{ gap: theme.spacing.xs }}>
+          <Text variant="title">Add Exercise</Text>
+          <Text variant="caption" tone="secondary">
+            Search the library or create your own.
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={8}
+          style={[
+            styles.closeBtn,
+            {
+              backgroundColor: theme.colors.surfaceMuted,
+              borderRadius: theme.radius.md,
+            },
+          ]}
+        >
+          <Ionicons name="close" size={22} color={theme.colors.textPrimary} />
         </Pressable>
       </View>
 
-      {/* Search */}
       <View style={{ paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.md }}>
         <TextField
-          placeholder="Search exercises..."
+          icon="search"
+          placeholder="Search exercises"
           value={search}
           onChangeText={setSearch}
           autoCapitalize="none"
@@ -80,7 +98,6 @@ export default function ExercisePickerScreen() {
         />
       </View>
 
-      {/* Muscle filter chips */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -100,7 +117,7 @@ export default function ExercisePickerScreen() {
               style={[
                 styles.chip,
                 {
-                  backgroundColor: selected ? theme.colors.accent : theme.colors.surfaceElevated,
+                  backgroundColor: selected ? theme.colors.accent : theme.colors.surfaceMuted,
                   borderColor: selected ? theme.colors.accent : theme.colors.border,
                   borderRadius: theme.radius.pill,
                 },
@@ -110,7 +127,7 @@ export default function ExercisePickerScreen() {
                 variant="caption"
                 style={{
                   color: selected ? '#FFFFFF' : theme.colors.textPrimary,
-                  fontWeight: '600',
+                  fontWeight: '700',
                 }}
               >
                 {m}
@@ -128,24 +145,24 @@ export default function ExercisePickerScreen() {
           <ExerciseListItem exercise={item} onSelect={handleSelect} />
         )}
         ListEmptyComponent={
-          <View style={{ alignItems: 'center', paddingVertical: theme.spacing.xxxl }}>
-            <Text variant="body" tone="muted">
-              {isLoading ? 'Loading exercises...' : 'No exercises found'}
-            </Text>
-          </View>
+          <EmptyState
+            icon={isLoading ? 'refresh-outline' : 'search-outline'}
+            title={isLoading ? 'Loading exercises' : 'No exercises found'}
+            description={isLoading ? 'Pulling your library into the picker.' : 'Try another muscle group or create a custom exercise.'}
+          />
         }
         ListFooterComponent={
-          <View style={{ paddingVertical: theme.spacing.md }}>
+          <View style={{ paddingVertical: theme.spacing.md, paddingHorizontal: theme.spacing.lg }}>
             {!showCustomForm ? (
               <Pressable
                 onPress={() => setShowCustomForm(true)}
                 style={[
                   styles.createCustomBtn,
                   {
-                    marginHorizontal: theme.spacing.lg,
-                    paddingVertical: theme.spacing.md,
+                    paddingVertical: theme.spacing.lg,
                     borderColor: theme.colors.border,
                     borderRadius: theme.radius.md,
+                    backgroundColor: theme.colors.surfaceElevated,
                   },
                 ]}
               >
@@ -164,6 +181,7 @@ export default function ExercisePickerScreen() {
         }
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
       />
     </Screen>
   );
@@ -176,8 +194,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomWidth: 1,
   },
+  closeBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   chip: {
-    paddingVertical: 6,
+    paddingVertical: 7,
     paddingHorizontal: 14,
     borderWidth: 1,
   },

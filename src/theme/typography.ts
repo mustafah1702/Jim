@@ -9,15 +9,15 @@ const systemFont = Platform.select({
 export const typography = {
   display: {
     fontFamily: systemFont,
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '800',
-    letterSpacing: -0.5,
+    letterSpacing: 0,
   },
   title: {
     fontFamily: systemFont,
     fontSize: 24,
     fontWeight: '700',
-    letterSpacing: -0.3,
+    letterSpacing: 0,
   },
   headline: {
     fontFamily: systemFont,
@@ -38,6 +38,12 @@ export const typography = {
     fontFamily: systemFont,
     fontSize: 13,
     fontWeight: '400',
+  },
+  label: {
+    fontFamily: systemFont,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0,
   },
   number: {
     fontFamily: Platform.select({

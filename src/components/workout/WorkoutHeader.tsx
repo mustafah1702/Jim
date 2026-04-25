@@ -1,5 +1,7 @@
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Button } from '@/components/Button';
+import { IconButton } from '@/components/IconButton';
 import { Text } from '@/components/Text';
 import { useTimer } from '@/hooks/useTimer';
 import { useWorkoutStore } from '@/stores/workoutStore';
@@ -39,61 +41,64 @@ export function WorkoutHeader({ onFinish, finishing }: WorkoutHeaderProps) {
       style={[
         styles.container,
         {
-          backgroundColor: theme.colors.surface,
+          backgroundColor: theme.colors.background,
           borderBottomColor: theme.colors.border,
           paddingHorizontal: theme.spacing.lg,
-          paddingBottom: theme.spacing.md,
+          paddingBottom: theme.spacing.lg,
           gap: theme.spacing.md,
         },
       ]}
     >
-      {/* Top row: Discard / Timer / Finish */}
       <View style={styles.topRow}>
-        <Pressable onPress={handleDiscard} hitSlop={8}>
-          <Text variant="body" tone="danger">
-            Discard
+        <IconButton icon="close" tone="danger" variant="soft" onPress={handleDiscard} />
+
+        <View style={styles.timerWrap}>
+          <Text variant="label" tone="muted">
+            ACTIVE
           </Text>
-        </Pressable>
+          <Text variant="number">{elapsed}</Text>
+        </View>
 
-        <Text variant="number">{elapsed}</Text>
-
-        <Pressable
+        <Button
+          label={finishing ? 'Saving' : 'Finish'}
+          size="sm"
+          fullWidth={false}
+          icon="checkmark"
           onPress={onFinish}
           disabled={finishing}
-          style={[
-            styles.finishBtn,
-            {
-              backgroundColor: theme.colors.accent,
-              borderRadius: theme.radius.sm,
-              paddingVertical: theme.spacing.xs,
-              paddingHorizontal: theme.spacing.md,
-              opacity: finishing ? 0.5 : 1,
-            },
-          ]}
-        >
-          <Text variant="bodyStrong" style={{ color: '#FFFFFF' }}>
-            {finishing ? 'Saving...' : 'Finish'}
-          </Text>
-        </Pressable>
+        />
       </View>
 
-      {/* Stats row */}
+      <View style={{ gap: theme.spacing.xs }}>
+        <Text variant="title">Workout</Text>
+        <Text variant="body" tone="secondary">
+          Keep the log moving. Long press a set to delete it.
+        </Text>
+      </View>
+
       <View style={styles.statsRow}>
-        <Text variant="caption" tone="muted">
-          {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''}
-        </Text>
-        <Text variant="caption" tone="muted">
-          ·
-        </Text>
-        <Text variant="caption" tone="muted">
-          {totalSets} set{totalSets !== 1 ? 's' : ''}
-        </Text>
-        <Text variant="caption" tone="muted">
-          ·
-        </Text>
-        <Text variant="caption" tone="muted">
-          {totalVolume.toLocaleString()} lbs
-        </Text>
+        {[
+          { label: 'Exercises', value: exerciseCount },
+          { label: 'Sets', value: totalSets },
+          { label: 'Volume', value: totalVolume.toLocaleString() },
+        ].map((stat) => (
+          <View
+            key={stat.label}
+            style={[
+              styles.statPill,
+              {
+                backgroundColor: theme.colors.surfaceElevated,
+                borderColor: theme.colors.border,
+                borderRadius: theme.radius.md,
+              },
+            ]}
+          >
+            <Text variant="bodyStrong">{stat.value}</Text>
+            <Text variant="caption" tone="muted">
+              {stat.label}
+            </Text>
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -108,14 +113,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  finishBtn: {
+  timerWrap: {
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 2,
   },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    justifyContent: 'center',
+  },
+  statPill: {
+    flex: 1,
+    borderWidth: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    gap: 2,
   },
 });

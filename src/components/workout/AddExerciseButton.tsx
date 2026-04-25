@@ -17,7 +17,7 @@ export function AddExerciseButton() {
           backgroundColor: theme.colors.surfaceElevated,
           borderColor: theme.colors.border,
           borderRadius: theme.radius.md,
-          paddingVertical: theme.spacing.md,
+          paddingVertical: theme.spacing.lg,
           opacity: pressed ? 0.85 : 1,
         },
       ]}

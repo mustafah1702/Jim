@@ -1,5 +1,7 @@
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Card } from '@/components/Card';
+import { IconButton } from '@/components/IconButton';
 import { Text } from '@/components/Text';
 import { SetRow } from '@/components/workout/SetRow';
 import { useWorkoutStore } from '@/stores/workoutStore';
@@ -30,36 +32,29 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
   };
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.colors.surface,
-          borderRadius: theme.radius.md,
-          padding: theme.spacing.md,
-          gap: theme.spacing.sm,
-        },
-      ]}
-    >
-      {/* Header */}
+    <Card style={{ gap: theme.spacing.md, padding: theme.spacing.md }}>
       <View style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <Text variant="headline" tone="accent">
+        <View style={{ flex: 1, gap: theme.spacing.xs }}>
+          <Text variant="headline" numberOfLines={1}>
             {exercise.name}
           </Text>
           {(exercise.primaryMuscle || exercise.equipment) && (
-            <Text variant="caption" tone="muted">
+            <Text variant="caption" tone="secondary">
               {[exercise.primaryMuscle, exercise.equipment].filter(Boolean).join(' · ')}
             </Text>
           )}
         </View>
-        <Pressable onPress={handleOverflowMenu} hitSlop={8}>
-          <Ionicons name="ellipsis-horizontal" size={20} color={theme.colors.textMuted} />
-        </Pressable>
+        <IconButton icon="ellipsis-horizontal" size={34} variant="plain" onPress={handleOverflowMenu} />
       </View>
 
-      {/* Column headers */}
-      <View style={[styles.columnHeaders, { paddingHorizontal: theme.spacing.md }]}>
+      <View
+        style={[
+          styles.columnHeaders,
+          {
+            paddingHorizontal: theme.spacing.sm,
+          },
+        ]}
+      >
         <Text variant="caption" tone="muted" style={styles.setLabelHeader}>
           SET
         </Text>
@@ -75,7 +70,6 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
         <View style={{ width: 26 }} />
       </View>
 
-      {/* Set rows */}
       {exercise.sets.map((set, i) => (
         <SetRow
           key={set.id}
@@ -92,15 +86,14 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
         />
       ))}
 
-      {/* Add Set button */}
       <Pressable
         onPress={() => addSet(exercise.id)}
         style={[
           styles.addSetBtn,
           {
-            paddingVertical: theme.spacing.sm,
+            paddingVertical: theme.spacing.md,
             borderRadius: theme.radius.sm,
-            backgroundColor: theme.colors.surfaceElevated,
+            backgroundColor: theme.colors.surfaceMuted,
           },
         ]}
       >
@@ -109,16 +102,16 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
           Add Set
         </Text>
       </Pressable>
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {},
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 12,
   },
   columnHeaders: {
     flexDirection: 'row',

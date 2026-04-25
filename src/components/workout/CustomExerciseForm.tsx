@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/Button';
+import { Card } from '@/components/Card';
 import { Text } from '@/components/Text';
 import { TextField } from '@/components/TextField';
 import { supabase } from '@/lib/supabase';
@@ -74,18 +76,24 @@ export function CustomExerciseForm({ onCreated }: CustomExerciseFormProps) {
   const chipStyle = (selected: boolean) => [
     styles.chip,
     {
-      backgroundColor: selected ? theme.colors.accent : theme.colors.surfaceElevated,
+      backgroundColor: selected ? theme.colors.accent : theme.colors.surfaceMuted,
       borderRadius: theme.radius.pill,
       borderColor: selected ? theme.colors.accent : theme.colors.border,
     },
   ];
 
   return (
-    <View style={[styles.container, { gap: theme.spacing.md, padding: theme.spacing.lg }]}>
-      <Text variant="headline">Create Custom Exercise</Text>
+    <Card style={{ gap: theme.spacing.md }}>
+      <View style={{ gap: theme.spacing.xs }}>
+        <Text variant="headline">Create Custom Exercise</Text>
+        <Text variant="body" tone="secondary">
+          Add it once and it joins your exercise library.
+        </Text>
+      </View>
 
       <TextField
         label="Exercise Name"
+        icon="create-outline"
         value={name}
         onChangeText={setName}
         placeholder="e.g. Cable Lateral Raise"
@@ -93,7 +101,7 @@ export function CustomExerciseForm({ onCreated }: CustomExerciseFormProps) {
 
       {/* Primary Muscle */}
       <View style={{ gap: theme.spacing.xs }}>
-        <Text variant="caption" tone="secondary" style={{ fontWeight: '600' }}>
+        <Text variant="label" tone="secondary">
           Primary Muscle
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -104,7 +112,7 @@ export function CustomExerciseForm({ onCreated }: CustomExerciseFormProps) {
                   variant="caption"
                   style={{
                     color: muscle === m ? '#FFFFFF' : theme.colors.textPrimary,
-                    fontWeight: '600',
+                    fontWeight: '700',
                   }}
                 >
                   {m}
@@ -117,7 +125,7 @@ export function CustomExerciseForm({ onCreated }: CustomExerciseFormProps) {
 
       {/* Equipment */}
       <View style={{ gap: theme.spacing.xs }}>
-        <Text variant="caption" tone="secondary" style={{ fontWeight: '600' }}>
+        <Text variant="label" tone="secondary">
           Equipment
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -128,7 +136,7 @@ export function CustomExerciseForm({ onCreated }: CustomExerciseFormProps) {
                   variant="caption"
                   style={{
                     color: equipment === eq ? '#FFFFFF' : theme.colors.textPrimary,
-                    fontWeight: '600',
+                    fontWeight: '700',
                   }}
                 >
                   {eq}
@@ -139,36 +147,18 @@ export function CustomExerciseForm({ onCreated }: CustomExerciseFormProps) {
         </ScrollView>
       </View>
 
-      {/* Create button */}
-      <Pressable
+      <Button
+        label="Create & Add"
+        icon="add"
         onPress={() => createMutation.mutate()}
         disabled={createMutation.isPending || !name.trim() || !muscle || !equipment}
-        style={({ pressed }) => [
-          styles.createBtn,
-          {
-            backgroundColor: theme.colors.accent,
-            borderRadius: theme.radius.md,
-            paddingVertical: theme.spacing.md,
-            opacity: createMutation.isPending || !name.trim() || !muscle || !equipment
-              ? 0.5
-              : pressed ? 0.85 : 1,
-          },
-        ]}
-      >
-        {createMutation.isPending ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <Text variant="bodyStrong" style={{ color: '#FFFFFF', textAlign: 'center' }}>
-            Create & Add
-          </Text>
-        )}
-      </Pressable>
-    </View>
+        loading={createMutation.isPending}
+      />
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {},
   chipRow: {
     flexDirection: 'row',
     gap: 8,
@@ -177,9 +167,5 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderWidth: 1,
-  },
-  createBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

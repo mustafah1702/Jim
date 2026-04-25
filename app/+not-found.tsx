@@ -1,23 +1,24 @@
-import { Link, Stack } from 'expo-router';
-import { View } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { Button } from '@/components/Button';
+import { Card } from '@/components/Card';
+import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
-import { Text } from '@/components/Text';
-import { useTheme } from '@/theme';
 
 export default function NotFoundScreen() {
-  const theme = useTheme();
+  const router = useRouter();
+
   return (
     <>
       <Stack.Screen options={{ title: 'Not found' }} />
       <Screen>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: theme.spacing.md }}>
-          <Text variant="title">This screen doesn't exist.</Text>
-          <Link href="/">
-            <Text variant="bodyStrong" tone="accent">
-              Go to home
-            </Text>
-          </Link>
-        </View>
+        <Card muted style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+          <EmptyState
+            icon="compass-outline"
+            title="Screen not found"
+            description="This route does not exist in Jim."
+            action={<Button label="Go Home" icon="home-outline" fullWidth={false} onPress={() => router.replace('/')} />}
+          />
+        </Card>
       </Screen>
     </>
   );

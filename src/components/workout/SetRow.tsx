@@ -56,14 +56,23 @@ export function SetRow({ set, index, onUpdate, onRemove }: SetRowProps) {
           backgroundColor: set.completed
             ? theme.colors.success + '18'
             : theme.colors.surfaceElevated,
+          borderColor: set.completed ? theme.colors.success : theme.colors.border,
           borderRadius: theme.radius.sm,
           paddingVertical: theme.spacing.sm,
-          paddingHorizontal: theme.spacing.md,
+          paddingHorizontal: theme.spacing.sm,
         },
       ]}
     >
-      {/* Set number / warmup toggle */}
-      <Pressable onPress={toggleWarmup} style={styles.setLabel}>
+      <Pressable
+        onPress={toggleWarmup}
+        style={[
+          styles.setLabel,
+          {
+            backgroundColor: set.isWarmup ? theme.colors.accentSoft : theme.colors.surfaceMuted,
+            borderRadius: theme.radius.sm,
+          },
+        ]}
+      >
         <Text
           variant="caption"
           tone={set.isWarmup ? 'accent' : 'muted'}
@@ -73,13 +82,13 @@ export function SetRow({ set, index, onUpdate, onRemove }: SetRowProps) {
         </Text>
       </Pressable>
 
-      {/* Weight input */}
       <TextInput
         style={[
           styles.input,
           {
             color: theme.colors.textPrimary,
-            backgroundColor: theme.colors.surface,
+            backgroundColor: theme.colors.background,
+            borderColor: theme.colors.border,
             borderRadius: theme.radius.sm,
           },
         ]}
@@ -88,6 +97,7 @@ export function SetRow({ set, index, onUpdate, onRemove }: SetRowProps) {
         onBlur={handleWeightBlur}
         placeholder="lbs"
         placeholderTextColor={theme.colors.textMuted}
+        selectionColor={theme.colors.accent}
         keyboardType="decimal-pad"
         returnKeyType="next"
       />
@@ -96,13 +106,13 @@ export function SetRow({ set, index, onUpdate, onRemove }: SetRowProps) {
         ×
       </Text>
 
-      {/* Reps input */}
       <TextInput
         style={[
           styles.input,
           {
             color: theme.colors.textPrimary,
-            backgroundColor: theme.colors.surface,
+            backgroundColor: theme.colors.background,
+            borderColor: theme.colors.border,
             borderRadius: theme.radius.sm,
           },
         ]}
@@ -111,11 +121,11 @@ export function SetRow({ set, index, onUpdate, onRemove }: SetRowProps) {
         onBlur={handleRepsBlur}
         placeholder="reps"
         placeholderTextColor={theme.colors.textMuted}
+        selectionColor={theme.colors.accent}
         keyboardType="number-pad"
         returnKeyType="done"
       />
 
-      {/* Complete toggle */}
       <Pressable onPress={toggleCompleted} hitSlop={8}>
         <Ionicons
           name={set.completed ? 'checkmark-circle' : 'checkmark-circle-outline'}
@@ -132,17 +142,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    borderWidth: 1,
   },
   setLabel: {
-    width: 28,
+    width: 32,
+    height: 36,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   input: {
     flex: 1,
+    minHeight: 36,
     textAlign: 'center',
     fontSize: 16,
     fontWeight: '600',
     paddingVertical: 6,
     paddingHorizontal: 8,
+    borderWidth: 1,
   },
 });

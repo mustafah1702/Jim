@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
-import { Text } from '@/components/Text';
 import { AddExerciseButton } from '@/components/workout/AddExerciseButton';
 import { ExerciseCard } from '@/components/workout/ExerciseCard';
 import { RestTimerBanner } from '@/components/workout/RestTimerBanner';
@@ -75,15 +75,25 @@ export default function WorkoutScreen() {
           contentContainerStyle={{
             padding: theme.spacing.lg,
             gap: theme.spacing.md,
-            paddingBottom: 100, // room for rest timer banner
+            paddingBottom: 120,
           }}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           {workout.exercises.length === 0 && (
-            <View style={{ alignItems: 'center', paddingVertical: theme.spacing.xxxl }}>
-              <Text variant="body" tone="muted">
-                Add an exercise to get started
-              </Text>
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                borderRadius: theme.radius.md,
+                backgroundColor: theme.colors.surfaceElevated,
+              }}
+            >
+              <EmptyState
+                icon="barbell-outline"
+                title="Build your workout"
+                description="Add your first exercise, then log weight and reps as you move."
+              />
             </View>
           )}
 

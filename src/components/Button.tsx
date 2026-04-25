@@ -1,12 +1,17 @@
-import { ActivityIndicator, Pressable, StyleSheet, type PressableProps, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, type PressableProps, type ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/Text';
 import { useTheme } from '@/theme';
 
-type Variant = 'primary' | 'secondary' | 'ghost';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Size = 'sm' | 'md' | 'lg';
 
 type ButtonProps = Omit<PressableProps, 'style'> & {
   label: string;
   variant?: Variant;
+  size?: Size;
+  icon?: keyof typeof Ionicons.glyphMap;
+  iconPosition?: 'left' | 'right';
   loading?: boolean;
   fullWidth?: boolean;
   style?: ViewStyle;
@@ -15,6 +20,9 @@ type ButtonProps = Omit<PressableProps, 'style'> & {
 export function Button({
   label,
   variant = 'primary',
+  size = 'md',
+  icon,
+  iconPosition = 'left',
   loading = false,
   fullWidth = true,
   disabled,
@@ -27,7 +35,7 @@ export function Button({
   const variantStyle: Record<Variant, { bg: string; fg: string; border: string }> = {
     primary: {
       bg: theme.colors.accent,
-      fg: '#FFFFFF',
+      fg: theme.colors.textInverse,
       border: theme.colors.accent,
     },
     secondary: {
@@ -40,9 +48,20 @@ export function Button({
       fg: theme.colors.textPrimary,
       border: 'transparent',
     },
+    danger: {
+      bg: theme.colors.dangerSoft,
+      fg: theme.colors.danger,
+      border: theme.colors.dangerSoft,
+    },
   };
 
   const v = variantStyle[variant];
+  const sizeStyle: Record<Size, { py: number; px: number; icon: number }> = {
+    sm: { py: theme.spacing.sm, px: theme.spacing.md, icon: 16 },
+    md: { py: theme.spacing.md, px: theme.spacing.lg, icon: 18 },
+    lg: { py: theme.spacing.lg, px: theme.spacing.xl, icon: 20 },
+  };
+  const s = sizeStyle[size];
 
   return (
     <Pressable
@@ -53,8 +72,8 @@ export function Button({
           backgroundColor: v.bg,
           borderColor: v.border,
           borderRadius: theme.radius.md,
-          paddingVertical: theme.spacing.md,
-          paddingHorizontal: theme.spacing.lg,
+          paddingVertical: s.py,
+          paddingHorizontal: s.px,
           opacity: isDisabled ? 0.5 : pressed ? 0.85 : 1,
           alignSelf: fullWidth ? 'stretch' : 'auto',
         },
@@ -65,9 +84,17 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={v.fg} />
       ) : (
-        <Text variant="bodyStrong" style={{ color: v.fg, textAlign: 'center' }}>
-          {label}
-        </Text>
+        <View style={styles.content}>
+          {icon && iconPosition === 'left' ? (
+            <Ionicons name={icon} size={s.icon} color={v.fg} />
+          ) : null}
+          <Text variant="bodyStrong" style={{ color: v.fg, textAlign: 'center' }}>
+            {label}
+          </Text>
+          {icon && iconPosition === 'right' ? (
+            <Ionicons name={icon} size={s.icon} color={v.fg} />
+          ) : null}
+        </View>
       )}
     </Pressable>
   );
@@ -78,5 +105,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  content: {
+    minHeight: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
 });
