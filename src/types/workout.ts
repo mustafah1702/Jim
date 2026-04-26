@@ -29,3 +29,27 @@ export type Exercise = {
   is_custom: boolean;
   created_at: string;
 };
+
+export type TemplateSet = {
+  id: string;
+  targetReps: number | null;
+  targetWeight: number | null;
+};
+
+export type TemplateExercise = {
+  id: string;
+  exerciseId: string;
+  name: string;
+  primaryMuscle: string | null;
+  equipment: string | null;
+  sets: TemplateSet[];
+};
+
+export type Template = {
+  id: string;
+  name: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  exercises: TemplateExercise[];
+};

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ActiveWorkout, WorkoutSet } from '@/types/workout';
+import type { ActiveWorkout, Template, WorkoutSet } from '@/types/workout';
 
 function uuid() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -21,6 +21,7 @@ type WorkoutState = {
 
   // Lifecycle
   startWorkout: () => void;
+  startFromTemplate: (template: Template) => void;
   discardWorkout: () => void;
 
   // Exercises
@@ -58,6 +59,31 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   startWorkout: () =>
     set({
       workout: { startedAt: new Date().toISOString(), exercises: [] },
+      restEndAt: null,
+    }),
+
+  startFromTemplate: (template) =>
+    set({
+      workout: {
+        startedAt: new Date().toISOString(),
+        exercises: template.exercises.map((te) => ({
+          id: uuid(),
+          exerciseId: te.exerciseId,
+          name: te.name,
+          primaryMuscle: te.primaryMuscle,
+          equipment: te.equipment,
+          sets:
+            te.sets.length > 0
+              ? te.sets.map((ts) => ({
+                  id: uuid(),
+                  weight: ts.targetWeight,
+                  reps: ts.targetReps,
+                  isWarmup: false,
+                  completed: false,
+                }))
+              : [createEmptySet()],
+        })),
+      },
       restEndAt: null,
     }),
 

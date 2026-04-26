@@ -66,6 +66,10 @@ function AuthGate() {
         name="exercise-picker"
         options={{ presentation: 'modal', gestureEnabled: true }}
       />
+      <Stack.Screen
+        name="template-form"
+        options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
+      />
     </Stack>
   );
 }
