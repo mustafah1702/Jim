@@ -58,7 +58,13 @@ create policy "users write own template_sets" on template_sets
   );
 ```
 
-The existing `target_sets`, `target_reps`, `target_weight` columns on `template_exercises` become unused. They can be dropped in a future migration.
+The same migration drops the now-unused columns from `template_exercises`:
+
+```sql
+alter table template_exercises drop column target_sets;
+alter table template_exercises drop column target_reps;
+alter table template_exercises drop column target_weight;
+```
 
 ### TypeScript Types
 
