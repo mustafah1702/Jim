@@ -1,4 +1,4 @@
-import { Alert, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -7,14 +7,27 @@ import { MetricTile } from '@/components/MetricTile';
 import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
 import { Text } from '@/components/Text';
+import { WorkoutHistoryCard } from '@/components/workout/WorkoutHistoryCard';
+import { useRecentWorkouts } from '@/hooks/useRecentWorkouts';
+import { useWeeklyStats } from '@/hooks/useWeeklyStats';
 import { useWorkoutStore } from '@/stores/workoutStore';
 import { useTheme } from '@/theme';
+
+function formatVolume(volume: number): string {
+  if (volume === 0) return '0';
+  if (volume < 1000) return volume.toFixed(0);
+  if (volume < 10000) return (volume / 1000).toFixed(1) + 'k';
+  return Math.round(volume / 1000) + 'k';
+}
 
 export default function TodayScreen() {
   const theme = useTheme();
   const router = useRouter();
   const startWorkout = useWorkoutStore((s) => s.startWorkout);
   const activeWorkout = useWorkoutStore((s) => s.workout);
+
+  const { data: weeklyStats } = useWeeklyStats();
+  const { data: recentWorkouts } = useRecentWorkouts(5);
 
   const handleStartEmpty = () => {
     startWorkout();
@@ -76,48 +89,50 @@ export default function TodayScreen() {
         <View style={{ gap: theme.spacing.md }}>
           <SectionHeader title="This Week" />
           <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
-            <MetricTile label="Workouts" value="0" icon="barbell-outline" tone="accent" />
-            <MetricTile label="Volume" value="0" icon="trending-up-outline" />
-            <MetricTile label="Streak" value="0" icon="flame-outline" tone="success" />
+            <MetricTile
+              label="Workouts"
+              value={String(weeklyStats?.workouts ?? 0)}
+              icon="barbell-outline"
+              tone="accent"
+            />
+            <MetricTile
+              label="Volume"
+              value={formatVolume(weeklyStats?.volume ?? 0)}
+              icon="trending-up-outline"
+            />
+            <MetricTile
+              label="PRs"
+              value={String(weeklyStats?.prs ?? 0)}
+              icon="trophy-outline"
+              tone="success"
+            />
           </View>
         </View>
 
         <View style={{ gap: theme.spacing.md }}>
           <SectionHeader title="Recent" actionLabel="History" onAction={() => router.push('/history')} />
-          <Card muted>
-            <EmptyState
-              compact
-              icon="time-outline"
-              title="No workouts logged"
-              description="Finished workouts will appear here with volume, sets, and duration."
-              action={
-                <Button
-                  label="Log first workout"
-                  icon="add"
-                  size="sm"
-                  fullWidth={false}
-                  onPress={handleStartEmpty}
-                />
-              }
-            />
-          </Card>
+          {recentWorkouts && recentWorkouts.length > 0 ? (
+            recentWorkouts.map((w) => <WorkoutHistoryCard key={w.id} workout={w} />)
+          ) : (
+            <Card muted>
+              <EmptyState
+                compact
+                icon="time-outline"
+                title="No workouts logged"
+                description="Finished workouts will appear here with volume, sets, and duration."
+                action={
+                  <Button
+                    label="Log first workout"
+                    icon="add"
+                    size="sm"
+                    fullWidth={false}
+                    onPress={handleStartEmpty}
+                  />
+                }
+              />
+            </Card>
+          )}
         </View>
-
-        <Card style={{ gap: theme.spacing.sm }}>
-          <Text variant="headline">Quick Setup</Text>
-          <Text variant="body" tone="secondary">
-            Templates and progress charts are ready for the next feature pass.
-          </Text>
-          <Button
-            label="View Templates"
-            icon="arrow-forward"
-            iconPosition="right"
-            variant="ghost"
-            fullWidth={false}
-            onPress={() => Alert.alert('Templates', 'Saved workout templates will live here.')}
-            style={{ alignSelf: 'flex-start', paddingHorizontal: 0 }}
-          />
-        </Card>
       </ScrollView>
     </Screen>
   );
