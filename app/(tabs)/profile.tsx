@@ -1,16 +1,225 @@
-import { ScrollView, View } from 'react-native';
+import { ActionSheetIOS, Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { MetricTile } from '@/components/MetricTile';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
+import { usePreferences } from '@/hooks/usePreferences';
+import { useProfileStats } from '@/hooks/useProfileStats';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
+import { usePreferencesStore, type ThemePreference, type WeightUnit } from '@/stores/preferencesStore';
 import { useTheme } from '@/theme';
+
+type RowProps = {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value?: string;
+  onPress?: () => void;
+  danger?: boolean;
+};
+
+function SettingsRow({ icon, label, value, onPress, danger }: RowProps) {
+  const theme = useTheme();
+  const iconColor = danger ? theme.colors.danger : theme.colors.textSecondary;
+  const labelColor = danger ? theme.colors.danger : theme.colors.textPrimary;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.row,
+        {
+          paddingVertical: theme.spacing.md,
+          opacity: pressed && onPress ? 0.7 : 1,
+        },
+      ]}
+    >
+      <View style={styles.rowLeft}>
+        <View
+          style={[
+            styles.rowIcon,
+            {
+              backgroundColor: danger
+                ? theme.colors.dangerSoft
+                : theme.colors.surfaceMuted,
+              borderRadius: theme.radius.sm,
+            },
+          ]}
+        >
+          <Ionicons name={icon} size={16} color={iconColor} />
+        </View>
+        <Text variant="body" style={{ color: labelColor }}>
+          {label}
+        </Text>
+      </View>
+      <View style={styles.rowRight}>
+        {value ? (
+          <Text variant="caption" tone="muted">
+            {value}
+          </Text>
+        ) : null}
+        {onPress ? (
+          <Ionicons
+            name="chevron-forward"
+            size={16}
+            color={theme.colors.textMuted}
+          />
+        ) : null}
+      </View>
+    </Pressable>
+  );
+}
+
+function SettingsSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  const theme = useTheme();
+
+  return (
+    <View style={{ gap: theme.spacing.xs }}>
+      <Text
+        variant="label"
+        tone="muted"
+        style={{
+          paddingHorizontal: theme.spacing.xs,
+          textTransform: 'uppercase',
+          letterSpacing: 1,
+        }}
+      >
+        {title}
+      </Text>
+      <Card style={{ paddingVertical: theme.spacing.xs }}>{children}</Card>
+    </View>
+  );
+}
+
+function Divider() {
+  const theme = useTheme();
+  return (
+    <View
+      style={{
+        height: StyleSheet.hairlineWidth,
+        backgroundColor: theme.colors.border,
+        marginLeft: 40,
+      }}
+    />
+  );
+}
+
+const UNIT_OPTIONS: { label: string; value: WeightUnit }[] = [
+  { label: 'Pounds (lbs)', value: 'lbs' },
+  { label: 'Kilograms (kg)', value: 'kg' },
+];
+
+const REST_OPTIONS: { label: string; value: number }[] = [
+  { label: '30 seconds', value: 30 },
+  { label: '60 seconds', value: 60 },
+  { label: '90 seconds', value: 90 },
+  { label: '120 seconds', value: 120 },
+  { label: '180 seconds', value: 180 },
+  { label: '300 seconds', value: 300 },
+];
+
+const THEME_OPTIONS: { label: string; value: ThemePreference }[] = [
+  { label: 'System', value: 'system' },
+  { label: 'Light', value: 'light' },
+  { label: 'Dark', value: 'dark' },
+];
+
+function showPicker<T extends string | number>(
+  title: string,
+  options: { label: string; value: T }[],
+  onSelect: (value: T) => void,
+) {
+  if (Platform.OS === 'ios') {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        title,
+        options: [...options.map((o) => o.label), 'Cancel'],
+        cancelButtonIndex: options.length,
+      },
+      (index) => {
+        if (index < options.length) {
+          onSelect(options[index].value);
+        }
+      },
+    );
+  } else {
+    // Android fallback using Alert
+    Alert.alert(
+      title,
+      undefined,
+      [
+        ...options.map((o) => ({
+          text: o.label,
+          onPress: () => onSelect(o.value),
+        })),
+        { text: 'Cancel', style: 'cancel' as const },
+      ],
+    );
+  }
+}
 
 export default function ProfileScreen() {
   const theme = useTheme();
   const session = useAuthStore((s) => s.session);
+  const { data: stats } = useProfileStats();
+
+  // Load preferences from Supabase into store
+  usePreferences();
+  const weightUnit = usePreferencesStore((s) => s.weightUnit);
+  const restTimerSeconds = usePreferencesStore((s) => s.restTimerSeconds);
+  const themePreference = usePreferencesStore((s) => s.theme);
+  const setPreferences = usePreferencesStore((s) => s.setPreferences);
+
+  const email = session?.user.email ?? 'Not signed in';
+  const initial = (email[0] ?? 'J').toUpperCase();
+  const createdAt = session?.user.created_at
+    ? new Date(session.user.created_at).toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      })
+    : null;
+
+  const handleSignOut = () => {
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: () => supabase.auth.signOut(),
+      },
+    ]);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all workout data. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            // TODO: implement account deletion
+          },
+        },
+      ],
+    );
+  };
+
+  const themeLabelMap: Record<ThemePreference, string> = {
+    system: 'System',
+    light: 'Light',
+    dark: 'Dark',
+  };
 
   return (
     <Screen padded={false}>
@@ -23,67 +232,173 @@ export default function ProfileScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ gap: theme.spacing.xs }}>
-          <Text variant="display">Profile</Text>
-          <Text variant="body" tone="secondary">
-            {session?.user.email ?? 'Not signed in'}
-          </Text>
-        </View>
-
-        <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
-          <MetricTile label="Workouts" value="0" icon="barbell-outline" tone="accent" />
-          <MetricTile label="Sets" value="0" icon="checkmark-circle-outline" />
-          <MetricTile label="Custom" value="0" icon="create-outline" tone="success" />
-        </View>
-
-        <Card style={{ gap: theme.spacing.md }}>
+        {/* Header */}
+        <View style={{ alignItems: 'center', gap: theme.spacing.md }}>
           <View
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: theme.radius.md,
-              backgroundColor: theme.colors.accentSoft,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            style={[
+              styles.avatar,
+              {
+                backgroundColor: theme.colors.accentSoft,
+                borderRadius: theme.radius.xl,
+              },
+            ]}
           >
-            <Text variant="title" tone="accent">
-              {(session?.user.email?.[0] ?? 'J').toUpperCase()}
+            <Text variant="display" tone="accent" style={{ fontSize: 28 }}>
+              {initial}
             </Text>
           </View>
-          <View style={{ gap: theme.spacing.xs }}>
-            <Text variant="headline">Jim Account</Text>
-            <Text variant="body" tone="secondary">
-              Training preferences and account settings will live here.
-            </Text>
+          <View style={{ alignItems: 'center', gap: theme.spacing.xs }}>
+            <Text variant="headline">{email}</Text>
+            {createdAt ? (
+              <Text variant="caption" tone="muted">
+                Member since {createdAt}
+              </Text>
+            ) : null}
           </View>
-        </Card>
+        </View>
 
-        <Card muted style={{ gap: theme.spacing.md }}>
-          <Text variant="headline">Settings</Text>
-          {['Units: pounds', 'Theme: system', 'Rest timer: 90 seconds'].map((row) => (
-            <View
-              key={row}
-              style={{
-                paddingVertical: theme.spacing.sm,
-                borderBottomWidth: row === 'Rest timer: 90 seconds' ? 0 : 1,
-                borderBottomColor: theme.colors.border,
-              }}
-            >
-              <Text variant="bodyStrong">{row}</Text>
-            </View>
-          ))}
-        </Card>
-
-        <View>
-          <Button
-            label="Sign out"
-            icon="log-out-outline"
-            variant="danger"
-            onPress={() => supabase.auth.signOut()}
+        {/* KPIs */}
+        <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+          <MetricTile
+            label="Total Workouts"
+            value={String(stats?.totalWorkouts ?? 0)}
+            icon="barbell-outline"
+            tone="accent"
           />
+          <MetricTile
+            label="Days Active"
+            value={String(stats?.daysActive ?? 0)}
+            icon="calendar-outline"
+            tone="success"
+          />
+        </View>
+
+        {/* Preferences */}
+        <SettingsSection title="Preferences">
+          <SettingsRow
+            icon="barbell-outline"
+            label="Units"
+            value={weightUnit}
+            onPress={() =>
+              showPicker('Weight Unit', UNIT_OPTIONS, (v) =>
+                setPreferences({ weightUnit: v }),
+              )
+            }
+          />
+          <Divider />
+          <SettingsRow
+            icon="timer-outline"
+            label="Default Rest Timer"
+            value={`${restTimerSeconds}s`}
+            onPress={() =>
+              showPicker('Rest Timer', REST_OPTIONS, (v) =>
+                setPreferences({ restTimerSeconds: v }),
+              )
+            }
+          />
+        </SettingsSection>
+
+        {/* App */}
+        <SettingsSection title="App">
+          <SettingsRow
+            icon="moon-outline"
+            label="Appearance"
+            value={themeLabelMap[themePreference]}
+            onPress={() =>
+              showPicker('Appearance', THEME_OPTIONS, (v) =>
+                setPreferences({ theme: v }),
+              )
+            }
+          />
+        </SettingsSection>
+
+        {/* Data & Privacy */}
+        <SettingsSection title="Data & Privacy">
+          <SettingsRow
+            icon="download-outline"
+            label="Export Workout Data"
+            onPress={() => {
+              Alert.alert('Coming Soon', 'Data export will be available in a future update.');
+            }}
+          />
+          <Divider />
+          <SettingsRow
+            icon="shield-checkmark-outline"
+            label="Privacy Policy"
+            onPress={() => {}}
+          />
+          <Divider />
+          <SettingsRow
+            icon="document-text-outline"
+            label="Terms of Service"
+            onPress={() => {}}
+          />
+        </SettingsSection>
+
+        {/* Support */}
+        <SettingsSection title="Support">
+          <SettingsRow
+            icon="help-circle-outline"
+            label="Help & Feedback"
+            onPress={() => {}}
+          />
+          <Divider />
+          <SettingsRow
+            icon="information-circle-outline"
+            label="App Version"
+            value="1.0.0"
+          />
+        </SettingsSection>
+
+        {/* Sign Out */}
+        <View style={{ gap: theme.spacing.md }}>
+          <Button
+            label="Sign Out"
+            icon="log-out-outline"
+            variant="secondary"
+            onPress={handleSignOut}
+          />
+          <Pressable
+            onPress={handleDeleteAccount}
+            style={{ alignItems: 'center', paddingVertical: theme.spacing.sm }}
+          >
+            <Text variant="caption" tone="danger">
+              Delete Account
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  avatar: {
+    width: 64,
+    height: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  rowIcon: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

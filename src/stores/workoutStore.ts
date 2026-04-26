@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { ActiveWorkout, Template, WorkoutSet } from '@/types/workout';
+import { usePreferencesStore } from '@/stores/preferencesStore';
 
 function uuid() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -171,7 +172,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
     }),
 
   startRestTimer: (duration) => {
-    const d = duration ?? get().restDuration;
+    const d = duration ?? usePreferencesStore.getState().restTimerSeconds;
     set({ restEndAt: new Date(Date.now() + d * 1000).toISOString() });
   },
 
