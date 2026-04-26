@@ -1,7 +1,3 @@
-import { useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
@@ -10,8 +6,13 @@ import { CustomExerciseForm } from '@/components/workout/CustomExerciseForm';
 import { ExerciseListItem } from '@/components/workout/ExerciseListItem';
 import { useExercises } from '@/hooks/useExercises';
 import { useWorkoutStore } from '@/stores/workoutStore';
+import { useTemplateFormStore } from '@/stores/templateFormStore';
 import { useTheme } from '@/theme';
 import type { Exercise } from '@/types/workout';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 const MUSCLE_FILTERS = [
   'All', 'Chest', 'Back', 'Shoulders', 'Quads', 'Hamstrings',
@@ -23,6 +24,8 @@ export default function ExercisePickerScreen() {
   const router = useRouter();
   const { data: exercises, isLoading } = useExercises();
   const addExercise = useWorkoutStore((s) => s.addExercise);
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const addTemplateExercise = useTemplateFormStore((s) => s.addExercise);
 
   const [search, setSearch] = useState('');
   const [muscleFilter, setMuscleFilter] = useState('All');
@@ -42,12 +45,21 @@ export default function ExercisePickerScreen() {
   }, [exercises, search, muscleFilter]);
 
   const handleSelect = (exercise: Exercise) => {
-    addExercise({
-      id: exercise.id,
-      name: exercise.name,
-      primary_muscle: exercise.primary_muscle,
-      equipment: exercise.equipment,
-    });
+    if (mode === 'template') {
+      addTemplateExercise({
+        id: exercise.id,
+        name: exercise.name,
+        primary_muscle: exercise.primary_muscle,
+        equipment: exercise.equipment,
+      });
+    } else {
+      addExercise({
+        id: exercise.id,
+        name: exercise.name,
+        primary_muscle: exercise.primary_muscle,
+        equipment: exercise.equipment,
+      });
+    }
     router.back();
   };
 
