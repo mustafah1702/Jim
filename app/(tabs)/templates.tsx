@@ -1,22 +1,49 @@
-import { ScrollView, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
+import { TemplateCard } from '@/components/template/TemplateCard';
+import { useDeleteTemplate } from '@/hooks/useDeleteTemplate';
+import { useTemplates } from '@/hooks/useTemplates';
+import { useTemplateFormStore } from '@/stores/templateFormStore';
 import { useWorkoutStore } from '@/stores/workoutStore';
 import { useTheme } from '@/theme';
+import type { Template } from '@/types/workout';
 
 export default function TemplatesScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const startWorkout = useWorkoutStore((s) => s.startWorkout);
+  const { data: templates, isLoading } = useTemplates();
+  const deleteMutation = useDeleteTemplate();
+  const startFromTemplate = useWorkoutStore((s) => s.startFromTemplate);
+  const loadTemplate = useTemplateFormStore((s) => s.loadTemplate);
 
-  const handleStart = () => {
-    startWorkout();
+  const handleCreate = () => {
+    useTemplateFormStore.getState().startNewTemplate();
+    router.push('/template-form');
+  };
+
+  const handleStart = (template: Template) => {
+    startFromTemplate(template);
     router.push('/workout');
   };
+
+  const handleEdit = (template: Template) => {
+    loadTemplate(template);
+    router.push('/template-form');
+  };
+
+  const handleDelete = (templateId: string) => {
+    deleteMutation.mutate(templateId, {
+      onError: (error) => {
+        Alert.alert('Error', `Failed to delete template: ${error.message}`);
+      },
+    });
+  };
+
+  const hasTemplates = templates && templates.length > 0;
 
   return (
     <Screen padded={false}>
@@ -29,43 +56,56 @@ export default function TemplatesScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ gap: theme.spacing.xs }}>
-          <Text variant="display">Templates</Text>
-          <Text variant="body" tone="secondary">
-            Save repeatable workouts here when template building is added.
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <View style={{ flex: 1, gap: theme.spacing.xs }}>
+            <Text variant="display">Templates</Text>
+            <Text variant="body" tone="secondary">
+              Save and reuse your favorite workouts.
+            </Text>
+          </View>
+          {hasTemplates && (
+            <Button
+              label="+ New"
+              size="sm"
+              fullWidth={false}
+              onPress={handleCreate}
+            />
+          )}
         </View>
 
-        <Card style={{ gap: theme.spacing.md }}>
-          <Text variant="headline">Starter Structure</Text>
-          <View style={{ gap: theme.spacing.sm }}>
-            {['Upper Body', 'Lower Body', 'Push Pull Legs'].map((name) => (
-              <View
-                key={name}
-                style={{
-                  padding: theme.spacing.md,
-                  borderRadius: theme.radius.md,
-                  backgroundColor: theme.colors.surfaceMuted,
-                }}
-              >
-                <Text variant="bodyStrong">{name}</Text>
-                <Text variant="caption" tone="secondary">
-                  Template placeholder
-                </Text>
-              </View>
+        {!hasTemplates ? (
+          <EmptyState
+            icon="clipboard-outline"
+            title={isLoading ? 'Loading templates...' : 'No templates yet'}
+            description={
+              isLoading
+                ? 'Pulling your templates.'
+                : 'Create a template to save your go-to exercises and start workouts faster.'
+            }
+            action={
+              !isLoading ? (
+                <Button
+                  label="Create Template"
+                  icon="add"
+                  fullWidth={false}
+                  onPress={handleCreate}
+                />
+              ) : undefined
+            }
+          />
+        ) : (
+          <View style={{ gap: theme.spacing.md }}>
+            {templates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                onStart={() => handleStart(template)}
+                onEdit={() => handleEdit(template)}
+                onDelete={() => handleDelete(template.id)}
+              />
             ))}
           </View>
-        </Card>
-
-        <Card muted>
-          <EmptyState
-            compact
-            icon="list-outline"
-            title="No saved templates"
-            description="For now, start empty and build your session as you lift."
-            action={<Button label="Start Empty Workout" icon="add" fullWidth={false} onPress={handleStart} />}
-          />
-        </Card>
+        )}
       </ScrollView>
     </Screen>
   );
