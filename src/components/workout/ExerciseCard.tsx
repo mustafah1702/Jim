@@ -1,5 +1,6 @@
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { Card } from '@/components/Card';
 import { IconButton } from '@/components/IconButton';
 import { Text } from '@/components/Text';
@@ -86,6 +87,7 @@ export function ExerciseCard({ exercise, checkPR }: ExerciseCardProps) {
             onUpdate={(updates) => {
               updateSet(exercise.id, set.id, updates);
               if (updates.completed === true) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 startRestTimer();
               }
             }}

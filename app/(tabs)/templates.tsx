@@ -1,8 +1,12 @@
-import { Alert, ScrollView, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/Button';
+import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
+import { Skeleton } from '@/components/Skeleton';
 import { Text } from '@/components/Text';
 import { TemplateCard } from '@/components/template/TemplateCard';
 import { useDeleteTemplate } from '@/hooks/useDeleteTemplate';
@@ -15,6 +19,15 @@ import type { Template } from '@/types/workout';
 export default function TemplatesScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await queryClient.invalidateQueries();
+    setRefreshing(false);
+  };
+
   const { data: templates, isLoading } = useTemplates();
   const deleteMutation = useDeleteTemplate();
   const startFromTemplate = useWorkoutStore((s) => s.startFromTemplate);
@@ -55,6 +68,9 @@ export default function TemplatesScreen() {
           gap: theme.spacing.xl,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.accent} />
+        }
       >
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <View style={{ flex: 1, gap: theme.spacing.xs }}>
@@ -73,24 +89,31 @@ export default function TemplatesScreen() {
           )}
         </View>
 
-        {!hasTemplates ? (
+        {isLoading && !templates ? (
+          <View style={{ gap: theme.spacing.md }}>
+            {[0, 1, 2].map((i) => (
+              <Card key={i} style={{ gap: theme.spacing.md }}>
+                <Skeleton width="50%" height={18} />
+                <Skeleton width="80%" height={14} />
+                <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+                  <Skeleton width={80} height={32} borderRadius={theme.radius.sm} />
+                  <Skeleton width={80} height={32} borderRadius={theme.radius.sm} />
+                </View>
+              </Card>
+            ))}
+          </View>
+        ) : !hasTemplates ? (
           <EmptyState
             icon="clipboard-outline"
-            title={isLoading ? 'Loading templates...' : 'No templates yet'}
-            description={
-              isLoading
-                ? 'Pulling your templates.'
-                : 'Create a template to save your go-to exercises and start workouts faster.'
-            }
+            title="No templates yet"
+            description="Create a template to save your go-to exercises and start workouts faster."
             action={
-              !isLoading ? (
-                <Button
-                  label="Create Template"
-                  icon="add"
-                  fullWidth={false}
-                  onPress={handleCreate}
-                />
-              ) : undefined
+              <Button
+                label="Create Template"
+                icon="add"
+                fullWidth={false}
+                onPress={handleCreate}
+              />
             }
           />
         ) : (

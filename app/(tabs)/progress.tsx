@@ -1,10 +1,13 @@
-import { ScrollView, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, RefreshControl, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { MetricTile } from '@/components/MetricTile';
 import { Screen } from '@/components/Screen';
+import { Skeleton } from '@/components/Skeleton';
 import { Text } from '@/components/Text';
 import { VolumeChart } from '@/components/progress/VolumeChart';
 import { PRTrendChart } from '@/components/progress/PRTrendChart';
@@ -24,8 +27,17 @@ function formatVolume(volume: number): string {
 export default function ProgressScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await queryClient.invalidateQueries();
+    setRefreshing(false);
+  };
+
   const startWorkout = useWorkoutStore((s) => s.startWorkout);
-  const { data: stats } = useProgressStats();
+  const { data: stats, isLoading } = useProgressStats();
 
   const handleStart = () => {
     startWorkout();
@@ -44,6 +56,9 @@ export default function ProgressScreen() {
           gap: theme.spacing.xl,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.accent} />
+        }
       >
         <View style={{ gap: theme.spacing.xs }}>
           <Text variant="display">Progress</Text>
@@ -52,7 +67,33 @@ export default function ProgressScreen() {
           </Text>
         </View>
 
-        {hasData ? (
+        {isLoading && !stats ? (
+          <>
+            <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+              {[0, 1, 2].map((i) => (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    backgroundColor: theme.colors.surfaceElevated,
+                    borderColor: theme.colors.border,
+                    borderWidth: 1,
+                    borderRadius: theme.radius.md,
+                    padding: theme.spacing.md,
+                    gap: theme.spacing.sm,
+                  }}
+                >
+                  <Skeleton width={28} height={28} borderRadius={theme.radius.sm} />
+                  <Skeleton width={48} height={22} />
+                  <Skeleton width={64} height={12} />
+                </View>
+              ))}
+            </View>
+            <View style={{ alignItems: 'center', paddingVertical: theme.spacing.xl }}>
+              <ActivityIndicator size="small" color={theme.colors.accent} />
+            </View>
+          </>
+        ) : hasData ? (
           <>
             <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
               <MetricTile

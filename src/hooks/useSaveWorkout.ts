@@ -19,6 +19,7 @@ export function useSaveWorkout() {
           user_id: session.user.id,
           started_at: workout.startedAt,
           ended_at: new Date().toISOString(),
+          notes: workout.notes,
         })
         .select('id')
         .single();

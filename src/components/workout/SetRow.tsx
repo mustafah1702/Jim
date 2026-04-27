@@ -54,6 +54,7 @@ export function SetRow({ set, index, isPR, onUpdate, onRemove }: SetRowProps) {
       const r = parseInt(repsText, 10);
       if (!isNaN(w)) onUpdate({ weight: w });
       if (!isNaN(r)) onUpdate({ reps: r });
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     onUpdate({ completed: !set.completed });
   };

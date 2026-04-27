@@ -24,6 +24,7 @@ type WorkoutState = {
   startWorkout: () => void;
   startFromTemplate: (template: Template) => void;
   discardWorkout: () => void;
+  setNotes: (notes: string) => void;
 
   // Exercises
   addExercise: (exercise: {
@@ -59,7 +60,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
 
   startWorkout: () =>
     set({
-      workout: { startedAt: new Date().toISOString(), exercises: [] },
+      workout: { startedAt: new Date().toISOString(), notes: null, exercises: [] },
       restEndAt: null,
     }),
 
@@ -67,6 +68,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
     set({
       workout: {
         startedAt: new Date().toISOString(),
+        notes: null,
         exercises: template.exercises.map((te) => ({
           id: uuid(),
           exerciseId: te.exerciseId,
@@ -89,6 +91,12 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
     }),
 
   discardWorkout: () => set({ workout: null, restEndAt: null }),
+
+  setNotes: (notes) =>
+    set((state) => {
+      if (!state.workout) return state;
+      return { workout: { ...state.workout, notes } };
+    }),
 
   addExercise: (exercise) =>
     set((state) => {

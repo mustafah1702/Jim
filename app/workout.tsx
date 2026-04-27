@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
@@ -7,10 +8,12 @@ import { AddExerciseButton } from '@/components/workout/AddExerciseButton';
 import { ExerciseCard } from '@/components/workout/ExerciseCard';
 import { RestTimerBanner } from '@/components/workout/RestTimerBanner';
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader';
+import { Ionicons } from '@expo/vector-icons';
 import { useSaveWorkout } from '@/hooks/useSaveWorkout';
 import { useWorkoutPRs } from '@/hooks/useWorkoutPRs';
 import { useWorkoutStore } from '@/stores/workoutStore';
 import { useTheme } from '@/theme';
+import { Text } from '@/components/Text';
 
 export default function WorkoutScreen() {
   const theme = useTheme();
@@ -18,6 +21,9 @@ export default function WorkoutScreen() {
   const workout = useWorkoutStore((s) => s.workout);
   const startWorkout = useWorkoutStore((s) => s.startWorkout);
   const getTotalSets = useWorkoutStore((s) => s.getTotalSets);
+  const notes = useWorkoutStore((s) => s.workout?.notes ?? '');
+  const setNotes = useWorkoutStore((s) => s.setNotes);
+  const [notesExpanded, setNotesExpanded] = useState(notes.length > 0);
   const saveMutation = useSaveWorkout();
   const { fetchBaselines, checkPR } = useWorkoutPRs();
 
@@ -59,9 +65,15 @@ export default function WorkoutScreen() {
         text: 'Finish',
         onPress: () => {
           saveMutation.mutate(undefined, {
-            onSuccess: () => router.back(),
+            onSuccess: () => {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              router.back();
+            },
             onError: (error) => {
-              Alert.alert('Error', `Failed to save workout: ${error.message}`);
+              Alert.alert('Save Failed', error.message, [
+                { text: 'OK', style: 'cancel' },
+                { text: 'Retry', onPress: () => saveMutation.mutate() },
+              ]);
             },
           });
         },
@@ -88,6 +100,44 @@ export default function WorkoutScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          {notesExpanded ? (
+            <TextInput
+              style={{
+                backgroundColor: theme.colors.surfaceElevated,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                borderRadius: theme.radius.md,
+                padding: theme.spacing.md,
+                color: theme.colors.textPrimary,
+                fontSize: 15,
+                minHeight: 80,
+                textAlignVertical: 'top',
+              }}
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="How did it go?"
+              placeholderTextColor={theme.colors.textMuted}
+              multiline
+              maxLength={500}
+              selectionColor={theme.colors.accent}
+            />
+          ) : (
+            <Pressable
+              onPress={() => setNotesExpanded(true)}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: theme.spacing.sm,
+                paddingVertical: theme.spacing.sm,
+              }}
+            >
+              <Ionicons name="create-outline" size={16} color={theme.colors.textMuted} />
+              <Text variant="body" tone="muted">
+                {notes ? notes : 'Add notes...'}
+              </Text>
+            </Pressable>
+          )}
+
           {workout.exercises.length === 0 && (
             <View
               style={{

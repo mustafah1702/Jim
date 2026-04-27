@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { queryClient } from '@/lib/queryClient';
 import { initAuth, useAuthStore } from '@/stores/authStore';
+import { OfflineBanner } from '@/components/OfflineBanner';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -55,21 +56,24 @@ function AuthGate() {
   }, [session, hydrated, segments, router]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen
-        name="workout"
-        options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="exercise-picker"
-        options={{ presentation: 'modal', gestureEnabled: true }}
-      />
-      <Stack.Screen
-        name="template-form"
-        options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
-      />
-    </Stack>
+    <>
+      <OfflineBanner />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen
+          name="workout"
+          options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="exercise-picker"
+          options={{ presentation: 'modal', gestureEnabled: true }}
+        />
+        <Stack.Screen
+          name="template-form"
+          options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
+        />
+      </Stack>
+    </>
   );
 }

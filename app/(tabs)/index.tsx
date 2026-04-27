@@ -1,11 +1,14 @@
-import { ScrollView, View } from 'react-native';
+import { useState } from 'react';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { MetricTile } from '@/components/MetricTile';
 import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
+import { Skeleton } from '@/components/Skeleton';
 import { Text } from '@/components/Text';
 import { WorkoutHistoryCard } from '@/components/workout/WorkoutHistoryCard';
 import { useRecentWorkouts } from '@/hooks/useRecentWorkouts';
@@ -23,11 +26,20 @@ function formatVolume(volume: number): string {
 export default function TodayScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await queryClient.invalidateQueries();
+    setRefreshing(false);
+  };
+
   const startWorkout = useWorkoutStore((s) => s.startWorkout);
   const activeWorkout = useWorkoutStore((s) => s.workout);
 
-  const { data: weeklyStats } = useWeeklyStats();
-  const { data: recentWorkouts } = useRecentWorkouts(5);
+  const { data: weeklyStats, isLoading: statsLoading } = useWeeklyStats();
+  const { data: recentWorkouts, isLoading: recentLoading } = useRecentWorkouts(5);
 
   const handleStartEmpty = () => {
     startWorkout();
@@ -38,6 +50,9 @@ export default function TodayScreen() {
     <Screen padded={false}>
       <ScrollView
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.accent} />
+        }
         contentContainerStyle={{
           paddingHorizontal: theme.spacing.lg,
           paddingTop: theme.spacing.lg,
@@ -88,30 +103,79 @@ export default function TodayScreen() {
 
         <View style={{ gap: theme.spacing.md }}>
           <SectionHeader title="This Week" />
-          <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
-            <MetricTile
-              label="Workouts"
-              value={String(weeklyStats?.workouts ?? 0)}
-              icon="barbell-outline"
-              tone="accent"
-            />
-            <MetricTile
-              label="Volume"
-              value={formatVolume(weeklyStats?.volume ?? 0)}
-              icon="trending-up-outline"
-            />
-            <MetricTile
-              label="PRs"
-              value={String(weeklyStats?.prs ?? 0)}
-              icon="trophy-outline"
-              tone="success"
-            />
-          </View>
+          {statsLoading && !weeklyStats ? (
+            <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+              {[0, 1, 2].map((i) => (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    backgroundColor: theme.colors.surfaceElevated,
+                    borderColor: theme.colors.border,
+                    borderWidth: 1,
+                    borderRadius: theme.radius.md,
+                    padding: theme.spacing.md,
+                    gap: theme.spacing.sm,
+                  }}
+                >
+                  <Skeleton width={28} height={28} borderRadius={theme.radius.sm} />
+                  <Skeleton width={48} height={22} />
+                  <Skeleton width={64} height={12} />
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+              <MetricTile
+                label="Workouts"
+                value={String(weeklyStats?.workouts ?? 0)}
+                icon="barbell-outline"
+                tone="accent"
+              />
+              <MetricTile
+                label="Volume"
+                value={formatVolume(weeklyStats?.volume ?? 0)}
+                icon="trending-up-outline"
+              />
+              <MetricTile
+                label="PRs"
+                value={String(weeklyStats?.prs ?? 0)}
+                icon="trophy-outline"
+                tone="success"
+              />
+            </View>
+          )}
         </View>
 
         <View style={{ gap: theme.spacing.md }}>
           <SectionHeader title="Recent" actionLabel="History" onAction={() => router.push('/history')} />
-          {recentWorkouts && recentWorkouts.length > 0 ? (
+          {recentLoading && !recentWorkouts ? (
+            <View style={{ gap: theme.spacing.md }}>
+              {[0, 1, 2].map((i) => (
+                <View
+                  key={i}
+                  style={{
+                    backgroundColor: theme.colors.surfaceElevated,
+                    borderColor: theme.colors.border,
+                    borderWidth: 1,
+                    borderRadius: theme.radius.md,
+                    padding: theme.spacing.lg,
+                    gap: theme.spacing.md,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Skeleton width="60%" height={16} />
+                    <Skeleton width={40} height={16} />
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+                    <Skeleton width={50} height={12} />
+                    <Skeleton width={50} height={12} />
+                    <Skeleton width={50} height={12} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : recentWorkouts && recentWorkouts.length > 0 ? (
             recentWorkouts.map((w) => <WorkoutHistoryCard key={w.id} workout={w} />)
           ) : (
             <Card muted>

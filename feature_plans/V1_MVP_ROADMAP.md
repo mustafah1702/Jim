@@ -199,13 +199,13 @@ These are valuable features but should NOT delay the V1 release:
 
 ## Suggested Release Order
 
-### Sprint 1: App Store Blockers (1-2 days)
+### Sprint 1: App Store Blockers (1-2 days) [COMPLETED]
 1. Delete Account implementation
 2. Privacy Policy & Terms of Service (write + host)
 3. Remove or fix dead-end menu items
 4. App icon & splash screen
 
-### Sprint 2: Stability & Polish (2-3 days)
+### Sprint 2: Stability & Polish (2-3 days) [COMPLETED]
 5. Error handling & edge cases audit
 6. Loading states consistency
 7. Workout notes (DB column already exists)

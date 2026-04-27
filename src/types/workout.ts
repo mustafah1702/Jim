@@ -17,6 +17,7 @@ export type WorkoutExercise = {
 
 export type ActiveWorkout = {
   startedAt: string;
+  notes: string | null;
   exercises: WorkoutExercise[];
 };
 

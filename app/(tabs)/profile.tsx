@@ -1,5 +1,3 @@
-import { ActionSheetIOS, Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { MetricTile } from '@/components/MetricTile';
@@ -11,7 +9,9 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { usePreferencesStore, type ThemePreference, type WeightUnit } from '@/stores/preferencesStore';
 import { useTheme } from '@/theme';
+import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
+import { ActionSheetIOS, ActivityIndicator, Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type RowProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -134,8 +134,8 @@ const THEME_OPTIONS: { label: string; value: ThemePreference }[] = [
 ];
 
 // Update these URLs once the legal pages are hosted
-const PRIVACY_POLICY_URL = 'https://your-domain.com/privacy-policy.html';
-const TERMS_OF_SERVICE_URL = 'https://your-domain.com/terms-of-service.html';
+const PRIVACY_POLICY_URL = 'https://mustafah1702.github.io/Jim/privacy-policy.html';
+const TERMS_OF_SERVICE_URL = 'https://mustafah1702.github.io/Jim/terms-of-service.html';
 
 function showPicker<T extends string | number>(
   title: string,
@@ -174,7 +174,7 @@ function showPicker<T extends string | number>(
 export default function ProfileScreen() {
   const theme = useTheme();
   const session = useAuthStore((s) => s.session);
-  const { data: stats } = useProfileStats();
+  const { data: stats, isLoading: statsLoading } = useProfileStats();
 
   // Load preferences from Supabase into store
   usePreferences();
@@ -268,20 +268,26 @@ export default function ProfileScreen() {
         </View>
 
         {/* KPIs */}
-        <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
-          <MetricTile
-            label="Total Workouts"
-            value={String(stats?.totalWorkouts ?? 0)}
-            icon="barbell-outline"
-            tone="accent"
-          />
-          <MetricTile
-            label="Days Active"
-            value={String(stats?.daysActive ?? 0)}
-            icon="calendar-outline"
-            tone="success"
-          />
-        </View>
+        {statsLoading && !stats ? (
+          <View style={{ alignItems: 'center', paddingVertical: theme.spacing.md }}>
+            <ActivityIndicator size="small" color={theme.colors.accent} />
+          </View>
+        ) : (
+          <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+            <MetricTile
+              label="Total Workouts"
+              value={String(stats?.totalWorkouts ?? 0)}
+              icon="barbell-outline"
+              tone="accent"
+            />
+            <MetricTile
+              label="Days Active"
+              value={String(stats?.daysActive ?? 0)}
+              icon="calendar-outline"
+              tone="success"
+            />
+          </View>
+        )}
 
         {/* Preferences */}
         <SettingsSection title="Preferences">

@@ -98,6 +98,12 @@ export function WorkoutHistoryCard({ workout }: WorkoutHistoryCardProps) {
           </Text>
         </View>
       </View>
+
+      {workout.notes ? (
+        <Text variant="caption" tone="muted" numberOfLines={2}>
+          {workout.notes}
+        </Text>
+      ) : null}
     </Card>
   );
 }
