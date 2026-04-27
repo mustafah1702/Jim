@@ -8,6 +8,7 @@ import { useProfileStats } from '@/hooks/useProfileStats';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { usePreferencesStore, type ThemePreference, type WeightUnit } from '@/stores/preferencesStore';
+import { useWorkoutStore } from '@/stores/workoutStore';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
@@ -198,7 +199,10 @@ export default function ProfileScreen() {
       {
         text: 'Sign Out',
         style: 'destructive',
-        onPress: () => supabase.auth.signOut(),
+        onPress: () => {
+          useWorkoutStore.getState().discardWorkout();
+          supabase.auth.signOut();
+        },
       },
     ]);
   };
@@ -218,6 +222,7 @@ export default function ProfileScreen() {
               Alert.alert('Error', 'Failed to delete account. Please try again.');
               return;
             }
+            useWorkoutStore.getState().discardWorkout();
             await supabase.auth.signOut();
           },
         },

@@ -153,8 +153,8 @@ export default function HistoryScreen() {
               <Card muted>
                 <EmptyState
                   icon="time-outline"
-                  title="No workout history yet"
-                  description="Finish a workout and it will show up here with your exercises, sets, and totals."
+                  title="Your workouts will show up here"
+                  description="After you finish a workout, you'll see it here with your sets, volume, and duration."
                   action={<Button label="Start Workout" icon="add" fullWidth={false} onPress={handleStart} />}
                 />
               </Card>

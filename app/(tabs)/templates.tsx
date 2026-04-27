@@ -105,8 +105,8 @@ export default function TemplatesScreen() {
         ) : !hasTemplates ? (
           <EmptyState
             icon="clipboard-outline"
-            title="No templates yet"
-            description="Create a template to save your go-to exercises and start workouts faster."
+            title="Save time with templates"
+            description="Templates let you pre-build workouts so you can start training with one tap."
             action={
               <Button
                 label="Create Template"

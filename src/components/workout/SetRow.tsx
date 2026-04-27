@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -6,20 +6,37 @@ import { Text } from '@/components/Text';
 import { useTheme } from '@/theme';
 import type { WorkoutSet } from '@/types/workout';
 
+export type SetRowRef = {
+  focusWeight: () => void;
+  focusReps: () => void;
+};
+
 type SetRowProps = {
   set: WorkoutSet;
   index: number;
   isPR: boolean;
+  isLastSet: boolean;
   onUpdate: (updates: Partial<Pick<WorkoutSet, 'weight' | 'reps' | 'isWarmup' | 'completed'>>) => void;
   onRemove: () => void;
+  onSubmitLastField: () => void;
 };
 
-export function SetRow({ set, index, isPR, onUpdate, onRemove }: SetRowProps) {
+export const SetRow = forwardRef<SetRowRef, SetRowProps>(function SetRow(
+  { set, index, isPR, isLastSet, onUpdate, onRemove, onSubmitLastField },
+  ref,
+) {
   const theme = useTheme();
+  const weightRef = useRef<TextInput>(null);
+  const repsRef = useRef<TextInput>(null);
   const [weightText, setWeightText] = useState(set.weight != null ? String(set.weight) : '');
   const [repsText, setRepsText] = useState(set.reps != null ? String(set.reps) : '');
 
   const prevCompletedRef = useRef(set.completed);
+
+  useImperativeHandle(ref, () => ({
+    focusWeight: () => weightRef.current?.focus(),
+    focusReps: () => repsRef.current?.focus(),
+  }));
 
   useEffect(() => {
     if (isPR && set.completed && !prevCompletedRef.current) {
@@ -48,7 +65,6 @@ export function SetRow({ set, index, isPR, onUpdate, onRemove }: SetRowProps) {
   const toggleWarmup = () => onUpdate({ isWarmup: !set.isWarmup });
 
   const toggleCompleted = () => {
-    // Parse current values before completing
     if (!set.completed) {
       const w = parseFloat(weightText);
       const r = parseInt(repsText, 10);
@@ -95,6 +111,7 @@ export function SetRow({ set, index, isPR, onUpdate, onRemove }: SetRowProps) {
       </Pressable>
 
       <TextInput
+        ref={weightRef}
         style={[
           styles.input,
           {
@@ -107,6 +124,7 @@ export function SetRow({ set, index, isPR, onUpdate, onRemove }: SetRowProps) {
         value={weightText}
         onChangeText={setWeightText}
         onBlur={handleWeightBlur}
+        onSubmitEditing={() => repsRef.current?.focus()}
         placeholder="lbs"
         placeholderTextColor={theme.colors.textMuted}
         selectionColor={theme.colors.accent}
@@ -119,6 +137,7 @@ export function SetRow({ set, index, isPR, onUpdate, onRemove }: SetRowProps) {
       </Text>
 
       <TextInput
+        ref={repsRef}
         style={[
           styles.input,
           {
@@ -131,11 +150,12 @@ export function SetRow({ set, index, isPR, onUpdate, onRemove }: SetRowProps) {
         value={repsText}
         onChangeText={setRepsText}
         onBlur={handleRepsBlur}
+        onSubmitEditing={onSubmitLastField}
         placeholder="reps"
         placeholderTextColor={theme.colors.textMuted}
         selectionColor={theme.colors.accent}
         keyboardType="number-pad"
-        returnKeyType="done"
+        returnKeyType={isLastSet ? 'done' : 'next'}
       />
 
       {isPR && (
@@ -151,7 +171,7 @@ export function SetRow({ set, index, isPR, onUpdate, onRemove }: SetRowProps) {
       </Pressable>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {

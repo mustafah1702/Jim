@@ -149,8 +149,8 @@ export default function WorkoutScreen() {
             >
               <EmptyState
                 icon="barbell-outline"
-                title="Build your workout"
-                description="Add your first exercise, then log weight and reps as you move."
+                title="Add your first exercise"
+                description="Tap 'Add Exercise' below to pick from 36+ exercises or create your own."
               />
             </View>
           )}

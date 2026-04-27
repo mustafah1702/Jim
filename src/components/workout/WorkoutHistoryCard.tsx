@@ -1,7 +1,11 @@
-import { StyleSheet, View } from 'react-native';
+import { useRef } from 'react';
+import { Alert, Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { Card } from '@/components/Card';
 import { Text } from '@/components/Text';
+import { useDeleteWorkout } from '@/hooks/useDeleteWorkout';
 import { useTheme } from '@/theme';
 import type { WorkoutHistory } from '@/hooks/useRecentWorkouts';
 
@@ -42,8 +46,9 @@ function formatVolume(volume: number): string {
 
 export function WorkoutHistoryCard({ workout }: WorkoutHistoryCardProps) {
   const theme = useTheme();
+  const swipeableRef = useRef<Swipeable>(null);
+  const deleteMutation = useDeleteWorkout();
 
-  // Group sets by exercise
   const exerciseMap = new Map<string, string>();
   let totalSets = 0;
   let totalVolume = 0;
@@ -60,51 +65,104 @@ export function WorkoutHistoryCard({ workout }: WorkoutHistoryCardProps) {
   const displayNames = exerciseNames.slice(0, 3);
   const remaining = exerciseNames.length - displayNames.length;
 
+  const handleDelete = () => {
+    swipeableRef.current?.close();
+    Alert.alert('Delete Workout?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          deleteMutation.mutate(workout.id);
+        },
+      },
+    ]);
+  };
+
+  const renderRightActions = (
+    _progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+  ) => {
+    const scale = dragX.interpolate({
+      inputRange: [-80, 0],
+      outputRange: [1, 0.5],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Pressable
+        onPress={handleDelete}
+        style={[
+          styles.deleteAction,
+          {
+            backgroundColor: theme.colors.danger,
+            borderRadius: theme.radius.md,
+          },
+        ]}
+      >
+        <Animated.View style={{ transform: [{ scale }], alignItems: 'center', gap: 2 }}>
+          <Ionicons name="trash-outline" size={20} color="#fff" />
+          <Text variant="caption" style={{ color: '#fff', fontWeight: '600' }}>
+            Delete
+          </Text>
+        </Animated.View>
+      </Pressable>
+    );
+  };
+
   return (
-    <Card style={{ gap: theme.spacing.md }}>
-      <View style={styles.topRow}>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text variant="bodyStrong" numberOfLines={1}>
-            {displayNames.join(', ')}
-          </Text>
-          {remaining > 0 && (
-            <Text variant="caption" tone="muted">
-              +{remaining} more
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      overshootRight={false}
+      friction={2}
+    >
+      <Card style={{ gap: theme.spacing.md }}>
+        <View style={styles.topRow}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text variant="bodyStrong" numberOfLines={1}>
+              {displayNames.join(', ')}
             </Text>
-          )}
+            {remaining > 0 && (
+              <Text variant="caption" tone="muted">
+                +{remaining} more
+              </Text>
+            )}
+          </View>
+          <Text variant="caption" tone="muted">
+            {timeAgo(workout.started_at)}
+          </Text>
         </View>
-        <Text variant="caption" tone="muted">
-          {timeAgo(workout.started_at)}
-        </Text>
-      </View>
 
-      <View style={styles.statsRow}>
-        <View style={styles.stat}>
-          <Ionicons name="time-outline" size={14} color={theme.colors.textMuted} />
-          <Text variant="caption" tone="secondary">
-            {formatDuration(workout.started_at, workout.ended_at)}
-          </Text>
+        <View style={styles.statsRow}>
+          <View style={styles.stat}>
+            <Ionicons name="time-outline" size={14} color={theme.colors.textMuted} />
+            <Text variant="caption" tone="secondary">
+              {formatDuration(workout.started_at, workout.ended_at)}
+            </Text>
+          </View>
+          <View style={styles.stat}>
+            <Ionicons name="checkmark-circle-outline" size={14} color={theme.colors.textMuted} />
+            <Text variant="caption" tone="secondary">
+              {totalSets} sets
+            </Text>
+          </View>
+          <View style={styles.stat}>
+            <Ionicons name="barbell-outline" size={14} color={theme.colors.textMuted} />
+            <Text variant="caption" tone="secondary">
+              {formatVolume(totalVolume)} vol
+            </Text>
+          </View>
         </View>
-        <View style={styles.stat}>
-          <Ionicons name="checkmark-circle-outline" size={14} color={theme.colors.textMuted} />
-          <Text variant="caption" tone="secondary">
-            {totalSets} sets
-          </Text>
-        </View>
-        <View style={styles.stat}>
-          <Ionicons name="barbell-outline" size={14} color={theme.colors.textMuted} />
-          <Text variant="caption" tone="secondary">
-            {formatVolume(totalVolume)} vol
-          </Text>
-        </View>
-      </View>
 
-      {workout.notes ? (
-        <Text variant="caption" tone="muted" numberOfLines={2}>
-          {workout.notes}
-        </Text>
-      ) : null}
-    </Card>
+        {workout.notes ? (
+          <Text variant="caption" tone="muted" numberOfLines={2}>
+            {workout.notes}
+          </Text>
+        ) : null}
+      </Card>
+    </Swipeable>
   );
 }
 
@@ -124,5 +182,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+  },
+  deleteAction: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    marginLeft: 8,
   },
 });

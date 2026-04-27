@@ -182,8 +182,8 @@ export default function TodayScreen() {
               <EmptyState
                 compact
                 icon="time-outline"
-                title="No workouts logged"
-                description="Finished workouts will appear here with volume, sets, and duration."
+                title="Ready to train?"
+                description="Tap the button below to log your first workout, or create a template to get started faster."
                 action={
                   <Button
                     label="Log first workout"

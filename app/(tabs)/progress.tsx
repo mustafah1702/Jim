@@ -127,8 +127,8 @@ export default function ProgressScreen() {
           <Card muted>
             <EmptyState
               icon="trending-up-outline"
-              title="Progress charts are waiting"
-              description="Complete workouts to unlock exercise trends, volume changes, and personal bests."
+              title="Track your progress"
+              description="Log a few workouts and you'll see volume trends, PRs, and muscle group breakdowns here."
               action={<Button label="Log Workout" icon="add" fullWidth={false} onPress={handleStart} />}
             />
           </Card>
