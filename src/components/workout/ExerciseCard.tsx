@@ -10,9 +10,10 @@ import type { WorkoutExercise } from '@/types/workout';
 
 type ExerciseCardProps = {
   exercise: WorkoutExercise;
+  checkPR: (exerciseId: string, weight: number | null, reps: number | null) => { isWeightPR: boolean; isVolumePR: boolean };
 };
 
-export function ExerciseCard({ exercise }: ExerciseCardProps) {
+export function ExerciseCard({ exercise, checkPR }: ExerciseCardProps) {
   const theme = useTheme();
   const addSet = useWorkoutStore((s) => s.addSet);
   const removeSet = useWorkoutStore((s) => s.removeSet);
@@ -70,21 +71,28 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
         <View style={{ width: 26 }} />
       </View>
 
-      {exercise.sets.map((set, i) => (
-        <SetRow
-          key={set.id}
-          set={set}
-          index={i}
-          onUpdate={(updates) => {
-            updateSet(exercise.id, set.id, updates);
-            // Start rest timer when completing a set
-            if (updates.completed === true) {
-              startRestTimer();
-            }
-          }}
-          onRemove={() => removeSet(exercise.id, set.id)}
-        />
-      ))}
+      {exercise.sets.map((set, i) => {
+        const pr =
+          set.completed && !set.isWarmup
+            ? checkPR(exercise.exerciseId, set.weight, set.reps)
+            : { isWeightPR: false, isVolumePR: false };
+
+        return (
+          <SetRow
+            key={set.id}
+            set={set}
+            index={i}
+            isPR={pr.isWeightPR || pr.isVolumePR}
+            onUpdate={(updates) => {
+              updateSet(exercise.id, set.id, updates);
+              if (updates.completed === true) {
+                startRestTimer();
+              }
+            }}
+            onRemove={() => removeSet(exercise.id, set.id)}
+          />
+        );
+      })}
 
       <Pressable
         onPress={() => addSet(exercise.id)}

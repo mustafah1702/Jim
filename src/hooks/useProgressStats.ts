@@ -45,6 +45,14 @@ function formatWeekLabel(monday: Date): string {
   return `${monday.getMonth() + 1}/${monday.getDate()}`;
 }
 
+function formatDateLabel(date: Date): string {
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+function getDateKey(date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
 export function useProgressStats() {
   const session = useAuthStore((s) => s.session);
 
@@ -140,28 +148,34 @@ export function useProgressStats() {
       }));
 
       // --- PR trend (cumulative PRs over time) ---
-      // Track max weight per exercise across workouts chronologically
-      const exerciseMaxWeight = new Map<string, number>();
+      const { data: personalRecords, error: prErr } = await supabase
+        .from('personal_records')
+        .select('achieved_at')
+        .eq('user_id', userId)
+        .order('achieved_at', { ascending: true });
+
+      if (prErr) throw prErr;
+
       const prPoints: PRPoint[] = [];
       let cumulativePRs = 0;
+      let currentDateKey: string | null = null;
+      let currentPoint: PRPoint | null = null;
 
-      for (const w of workouts) {
-        let prsThisWorkout = 0;
-        for (const s of w.workout_sets ?? []) {
-          if (s.weight != null && s.weight > 0) {
-            const prevMax = exerciseMaxWeight.get(s.exercise_id) ?? 0;
-            if (s.weight > prevMax) {
-              if (prevMax > 0) prsThisWorkout++; // Don't count first-ever lift as PR
-              exerciseMaxWeight.set(s.exercise_id, s.weight);
-            }
-          }
+      for (const record of personalRecords ?? []) {
+        const date = new Date(record.achieved_at);
+        const dateKey = getDateKey(date);
+        cumulativePRs++;
+
+        if (dateKey === currentDateKey && currentPoint) {
+          currentPoint.cumulativePRs = cumulativePRs;
+        } else {
+          currentDateKey = dateKey;
+          currentPoint = {
+            date: formatDateLabel(date),
+            cumulativePRs,
+          };
+          prPoints.push(currentPoint);
         }
-        cumulativePRs += prsThisWorkout;
-        const date = new Date(w.started_at);
-        prPoints.push({
-          date: `${date.getMonth() + 1}/${date.getDate()}`,
-          cumulativePRs,
-        });
       }
 
       // --- Muscle group breakdown (all-time volume by primary_muscle) ---

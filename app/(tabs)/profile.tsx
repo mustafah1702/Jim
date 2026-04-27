@@ -1,4 +1,4 @@
-import { ActionSheetIOS, Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActionSheetIOS, Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { usePreferencesStore, type ThemePreference, type WeightUnit } from '@/stores/preferencesStore';
 import { useTheme } from '@/theme';
+import * as WebBrowser from 'expo-web-browser';
 
 type RowProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -132,6 +133,10 @@ const THEME_OPTIONS: { label: string; value: ThemePreference }[] = [
   { label: 'Dark', value: 'dark' },
 ];
 
+// Update these URLs once the legal pages are hosted
+const PRIVACY_POLICY_URL = 'https://your-domain.com/privacy-policy.html';
+const TERMS_OF_SERVICE_URL = 'https://your-domain.com/terms-of-service.html';
+
 function showPicker<T extends string | number>(
   title: string,
   options: { label: string; value: T }[],
@@ -207,8 +212,13 @@ export default function ProfileScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            // TODO: implement account deletion
+          onPress: async () => {
+            const { error } = await supabase.functions.invoke('delete-user');
+            if (error) {
+              Alert.alert('Error', 'Failed to delete account. Please try again.');
+              return;
+            }
+            await supabase.auth.signOut();
           },
         },
       ],
@@ -315,23 +325,15 @@ export default function ProfileScreen() {
         {/* Data & Privacy */}
         <SettingsSection title="Data & Privacy">
           <SettingsRow
-            icon="download-outline"
-            label="Export Workout Data"
-            onPress={() => {
-              Alert.alert('Coming Soon', 'Data export will be available in a future update.');
-            }}
-          />
-          <Divider />
-          <SettingsRow
             icon="shield-checkmark-outline"
             label="Privacy Policy"
-            onPress={() => {}}
+            onPress={() => WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL)}
           />
           <Divider />
           <SettingsRow
             icon="document-text-outline"
             label="Terms of Service"
-            onPress={() => {}}
+            onPress={() => WebBrowser.openBrowserAsync(TERMS_OF_SERVICE_URL)}
           />
         </SettingsSection>
 
@@ -340,7 +342,11 @@ export default function ProfileScreen() {
           <SettingsRow
             icon="help-circle-outline"
             label="Help & Feedback"
-            onPress={() => {}}
+            onPress={() =>
+              Linking.openURL(
+                'mailto:mustafahasan1702@gmail.com?subject=Jim%20App%20Feedback',
+              )
+            }
           />
           <Divider />
           <SettingsRow

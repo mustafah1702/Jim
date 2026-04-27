@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { Text } from '@/components/Text';
 import { useTheme } from '@/theme';
 import type { WorkoutSet } from '@/types/workout';
@@ -8,14 +9,24 @@ import type { WorkoutSet } from '@/types/workout';
 type SetRowProps = {
   set: WorkoutSet;
   index: number;
+  isPR: boolean;
   onUpdate: (updates: Partial<Pick<WorkoutSet, 'weight' | 'reps' | 'isWarmup' | 'completed'>>) => void;
   onRemove: () => void;
 };
 
-export function SetRow({ set, index, onUpdate, onRemove }: SetRowProps) {
+export function SetRow({ set, index, isPR, onUpdate, onRemove }: SetRowProps) {
   const theme = useTheme();
   const [weightText, setWeightText] = useState(set.weight != null ? String(set.weight) : '');
   const [repsText, setRepsText] = useState(set.reps != null ? String(set.reps) : '');
+
+  const prevCompletedRef = useRef(set.completed);
+
+  useEffect(() => {
+    if (isPR && set.completed && !prevCompletedRef.current) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    prevCompletedRef.current = set.completed;
+  }, [set.completed, isPR]);
 
   const handleWeightBlur = () => {
     const val = parseFloat(weightText);
@@ -125,6 +136,10 @@ export function SetRow({ set, index, onUpdate, onRemove }: SetRowProps) {
         keyboardType="number-pad"
         returnKeyType="done"
       />
+
+      {isPR && (
+        <Ionicons name="trophy" size={20} color={theme.colors.warning} />
+      )}
 
       <Pressable onPress={toggleCompleted} hitSlop={8}>
         <Ionicons

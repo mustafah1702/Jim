@@ -8,6 +8,7 @@ import { ExerciseCard } from '@/components/workout/ExerciseCard';
 import { RestTimerBanner } from '@/components/workout/RestTimerBanner';
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader';
 import { useSaveWorkout } from '@/hooks/useSaveWorkout';
+import { useWorkoutPRs } from '@/hooks/useWorkoutPRs';
 import { useWorkoutStore } from '@/stores/workoutStore';
 import { useTheme } from '@/theme';
 
@@ -18,11 +19,18 @@ export default function WorkoutScreen() {
   const startWorkout = useWorkoutStore((s) => s.startWorkout);
   const getTotalSets = useWorkoutStore((s) => s.getTotalSets);
   const saveMutation = useSaveWorkout();
+  const { fetchBaselines, checkPR } = useWorkoutPRs();
 
   // Start workout if navigated here without one active
   useEffect(() => {
     if (!workout) startWorkout();
   }, []);
+
+  useEffect(() => {
+    if (!workout || workout.exercises.length === 0) return;
+    const exerciseIds = workout.exercises.map((e) => e.exerciseId);
+    fetchBaselines(exerciseIds);
+  }, [workout?.exercises.length]);
 
   const handleFinish = () => {
     const completedSets = getTotalSets();
@@ -98,7 +106,7 @@ export default function WorkoutScreen() {
           )}
 
           {workout.exercises.map((exercise) => (
-            <ExerciseCard key={exercise.id} exercise={exercise} />
+            <ExerciseCard key={exercise.id} exercise={exercise} checkPR={checkPR} />
           ))}
 
           <AddExerciseButton />

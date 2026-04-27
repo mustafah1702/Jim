@@ -1,4 +1,5 @@
-import { type DimensionValue, View } from 'react-native';
+import { useState } from 'react';
+import { View } from 'react-native';
 import { Card } from '@/components/Card';
 import { SectionHeader } from '@/components/SectionHeader';
 import { Text } from '@/components/Text';
@@ -11,17 +12,31 @@ type PRTrendChartProps = {
 
 const CHART_HEIGHT = 140;
 const DOT_SIZE = 6;
+const LINE_WIDTH = 2;
 
 export function PRTrendChart({ data }: PRTrendChartProps) {
   const theme = useTheme();
+  const [chartWidth, setChartWidth] = useState(0);
 
   if (data.length === 0) return null;
 
-  const maxPRs = Math.max(...data.map((d) => d.cumulativePRs), 1);
   const totalPRs = data[data.length - 1]?.cumulativePRs ?? 0;
+  const maxPRs = Math.max(totalPRs, 1);
 
   // Show at most 12 points to keep it readable; sample evenly if more
   const displayData = data.length <= 12 ? data : samplePoints(data, 12);
+  const plotWidth = Math.max(chartWidth - DOT_SIZE, 0);
+  const plotHeight = CHART_HEIGHT - DOT_SIZE;
+
+  const getX = (i: number) => {
+    const pct = displayData.length === 1 ? 0.5 : i / (displayData.length - 1);
+    return DOT_SIZE / 2 + pct * plotWidth;
+  };
+
+  const getY = (point: PRPoint) => {
+    const pct = Math.max(0, Math.min(1, point.cumulativePRs / maxPRs));
+    return DOT_SIZE / 2 + pct * plotHeight;
+  };
 
   return (
     <View style={{ gap: theme.spacing.md }}>
@@ -36,7 +51,10 @@ export function PRTrendChart({ data }: PRTrendChartProps) {
           </Text>
         </View>
 
-        <View style={{ height: CHART_HEIGHT, position: 'relative' }}>
+        <View
+          style={{ height: CHART_HEIGHT, position: 'relative' }}
+          onLayout={(event) => setChartWidth(event.nativeEvent.layout.width)}
+        >
           {/* Grid lines */}
           {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
             <View
@@ -54,43 +72,34 @@ export function PRTrendChart({ data }: PRTrendChartProps) {
           ))}
 
           {/* Line segments + dots */}
-          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-            {displayData.map((point, i) => {
-              const x = displayData.length === 1 ? 0.5 : i / (displayData.length - 1);
-              const y = point.cumulativePRs / maxPRs;
-              const left = `${x * 100}%` as DimensionValue;
-              const bottom = y * CHART_HEIGHT - DOT_SIZE / 2;
-
-              return (
-                <View key={i}>
-                  {/* Line to next point */}
-                  {i < displayData.length - 1 && (
-                    <LineSegment
-                      x1={x}
-                      y1={y}
-                      x2={(i + 1) / (displayData.length - 1)}
-                      y2={displayData[i + 1].cumulativePRs / maxPRs}
-                      chartHeight={CHART_HEIGHT}
-                      color={theme.colors.accent}
-                    />
-                  )}
-                  {/* Dot */}
-                  <View
-                    style={{
-                      position: 'absolute',
-                      left,
-                      bottom,
-                      marginLeft: -DOT_SIZE / 2,
-                      width: DOT_SIZE,
-                      height: DOT_SIZE,
-                      borderRadius: DOT_SIZE / 2,
-                      backgroundColor: theme.colors.accent,
-                    }}
-                  />
-                </View>
-              );
-            })}
-          </View>
+          {chartWidth > 0 && (
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+              {displayData.slice(0, -1).map((point, i) => (
+                <LineSegment
+                  key={`line-${i}`}
+                  x1={getX(i)}
+                  y1={getY(point)}
+                  x2={getX(i + 1)}
+                  y2={getY(displayData[i + 1])}
+                  color={theme.colors.accent}
+                />
+              ))}
+              {displayData.map((point, i) => (
+                <View
+                  key={`dot-${i}`}
+                  style={{
+                    position: 'absolute',
+                    left: getX(i) - DOT_SIZE / 2,
+                    bottom: getY(point) - DOT_SIZE / 2,
+                    width: DOT_SIZE,
+                    height: DOT_SIZE,
+                    borderRadius: DOT_SIZE / 2,
+                    backgroundColor: theme.colors.accent,
+                  }}
+                />
+              ))}
+            </View>
+          )}
         </View>
 
         {/* X-axis labels */}
@@ -132,24 +141,23 @@ type LineSegmentProps = {
   y1: number;
   x2: number;
   y2: number;
-  chartHeight: number;
   color: string;
 };
 
-function LineSegment({ x1, y1, x2, y2, chartHeight, color }: LineSegmentProps) {
-  const dx = (x2 - x1) * 100; // percentage
-  const dy = (y2 - y1) * chartHeight; // pixels
-  const length = Math.sqrt((dx * 3.5) ** 2 + dy ** 2); // approximate pixel length (assuming ~350px width)
-  const angle = Math.atan2(-dy, dx * 3.5) * (180 / Math.PI);
+function LineSegment({ x1, y1, x2, y2, color }: LineSegmentProps) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const length = Math.sqrt(dx ** 2 + dy ** 2);
+  const angle = Math.atan2(-dy, dx) * (180 / Math.PI);
 
   return (
     <View
       style={{
         position: 'absolute',
-        left: `${x1 * 100}%` as DimensionValue,
-        bottom: y1 * chartHeight,
+        left: x1,
+        bottom: y1 - LINE_WIDTH / 2,
         width: length,
-        height: 2,
+        height: LINE_WIDTH,
         backgroundColor: color,
         transformOrigin: 'left center',
         transform: [{ rotate: `${angle}deg` }],
