@@ -1,11 +1,11 @@
-import { Alert, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Button } from '@/components/Button';
 import { IconButton } from '@/components/IconButton';
 import { Text } from '@/components/Text';
 import { useTimer } from '@/hooks/useTimer';
 import { useWorkoutStore } from '@/stores/workoutStore';
 import { useTheme } from '@/theme';
+import { useRouter } from 'expo-router';
+import { Alert, StyleSheet, View } from 'react-native';
 
 type WorkoutHeaderProps = {
   onFinish: () => void;
@@ -44,6 +44,7 @@ export function WorkoutHeader({ onFinish, finishing }: WorkoutHeaderProps) {
           backgroundColor: theme.colors.background,
           borderBottomColor: theme.colors.border,
           paddingHorizontal: theme.spacing.lg,
+          paddingTop: theme.spacing.md,
           paddingBottom: theme.spacing.lg,
           gap: theme.spacing.md,
         },
@@ -52,7 +53,7 @@ export function WorkoutHeader({ onFinish, finishing }: WorkoutHeaderProps) {
       <View style={styles.topRow}>
         <IconButton icon="close" tone="danger" variant="soft" onPress={handleDiscard} />
 
-        <View style={styles.timerWrap}>
+        <View pointerEvents="none" style={styles.timerWrap}>
           <Text variant="label" tone="muted">
             ACTIVE
           </Text>
@@ -109,12 +110,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   topRow: {
+    position: 'relative',
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   timerWrap: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 2,
   },
   statsRow: {

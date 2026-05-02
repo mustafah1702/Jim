@@ -1,19 +1,18 @@
-import { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
-import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
+import { Text } from '@/components/Text';
 import { AddExerciseButton } from '@/components/workout/AddExerciseButton';
 import { ExerciseCard } from '@/components/workout/ExerciseCard';
 import { RestTimerBanner } from '@/components/workout/RestTimerBanner';
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader';
-import { Ionicons } from '@expo/vector-icons';
 import { useSaveWorkout } from '@/hooks/useSaveWorkout';
 import { useWorkoutPRs } from '@/hooks/useWorkoutPRs';
 import { useWorkoutStore } from '@/stores/workoutStore';
 import { useTheme } from '@/theme';
-import { Text } from '@/components/Text';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 
 export default function WorkoutScreen() {
   const theme = useTheme();
@@ -147,11 +146,11 @@ export default function WorkoutScreen() {
                 backgroundColor: theme.colors.surfaceElevated,
               }}
             >
-              <EmptyState
+              {/* <EmptyState
                 icon="barbell-outline"
                 title="Add your first exercise"
                 description="Tap 'Add Exercise' below to pick from 36+ exercises or create your own."
-              />
+              /> */}
             </View>
           )}
 

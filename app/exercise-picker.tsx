@@ -115,10 +115,11 @@ export default function ExercisePickerScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: theme.spacing.lg,
-          paddingVertical: theme.spacing.md,
+          paddingVertical: theme.spacing.sm,
+          alignItems: 'center',
           gap: 8,
         }}
-        style={{ flexGrow: 0 }}
+        style={styles.filterScroll}
       >
         {MUSCLE_FILTERS.map((m) => {
           const selected = muscleFilter === m;
@@ -137,9 +138,11 @@ export default function ExercisePickerScreen() {
             >
               <Text
                 variant="caption"
+                numberOfLines={1}
                 style={{
                   color: selected ? '#FFFFFF' : theme.colors.textPrimary,
                   fontWeight: '700',
+                  lineHeight: 18,
                 }}
               >
                 {m}
@@ -213,9 +216,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chip: {
+    minHeight: 36,
     paddingVertical: 7,
     paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
+  },
+  filterScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+    minHeight: 52,
   },
   createCustomBtn: {
     flexDirection: 'row',

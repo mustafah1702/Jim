@@ -66,11 +66,24 @@ export const SetRow = forwardRef<SetRowRef, SetRowProps>(function SetRow(
 
   const toggleCompleted = () => {
     if (!set.completed) {
-      const w = parseFloat(weightText);
-      const r = parseInt(repsText, 10);
-      if (!isNaN(w)) onUpdate({ weight: w });
-      if (!isNaN(r)) onUpdate({ reps: r });
+      const w = Number(weightText.trim());
+      const r = Number(repsText.trim());
+      const hasWeight = weightText.trim().length > 0 && Number.isFinite(w);
+      const hasReps = repsText.trim().length > 0 && Number.isInteger(r);
+
+      if (!hasWeight || !hasReps) {
+        Alert.alert('Missing Set Values', 'Enter both weight and reps before completing a set.');
+        if (!hasWeight) {
+          weightRef.current?.focus();
+        } else {
+          repsRef.current?.focus();
+        }
+        return;
+      }
+
+      onUpdate({ weight: w, reps: r, completed: true });
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      return;
     }
     onUpdate({ completed: !set.completed });
   };

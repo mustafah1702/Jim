@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { Screen } from '@/components/Screen';
@@ -9,6 +18,8 @@ import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/theme';
 
 type Mode = 'sign-in' | 'sign-up';
+
+const HERO_IMAGE_URI = 'https://cdn.pixabay.com/photo/2015/01/09/11/22/fitness-594143_640.jpg';
 
 export default function SignInScreen() {
   const theme = useTheme();
@@ -53,36 +64,34 @@ export default function SignInScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: 'center',
-            padding: theme.spacing.lg,
-            gap: theme.spacing.xl,
           }}
         >
-          <View style={{ gap: theme.spacing.lg }}>
-            <View
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: theme.radius.lg,
-                backgroundColor: theme.colors.accent,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text variant="title" style={{ color: '#FFFFFF' }}>
-                J
+          <ImageBackground
+            source={{ uri: HERO_IMAGE_URI }}
+            resizeMode="cover"
+            imageStyle={styles.heroImage}
+            style={[styles.hero, { backgroundColor: '#101010' }]}
+          >
+            <View style={styles.heroOverlay} />
+            <View style={[styles.heroContent, { padding: theme.spacing.xl }]}>
+              <Text variant="display" style={{ color: '#FFFFFF' }}>
+                Jim
               </Text>
-            </View>
-
-            <View style={{ gap: theme.spacing.sm }}>
-              <Text variant="display">Jim</Text>
-              <Text variant="body" tone="secondary">
+              <Text variant="body" style={{ color: '#F3EDE4' }}>
                 {mode === 'sign-in' ? 'Welcome back. Time to lift.' : 'Create an account to start tracking.'}
               </Text>
             </View>
-          </View>
+          </ImageBackground>
 
-          <Card style={{ gap: theme.spacing.lg }}>
+          <Card
+            style={{
+              gap: theme.spacing.lg,
+              marginHorizontal: theme.spacing.lg,
+              marginTop: -theme.spacing.xl,
+              marginBottom: theme.spacing.xxl,
+              padding: theme.spacing.lg,
+            }}
+          >
             <View
               style={[
                 styles.segment,
@@ -143,11 +152,28 @@ export default function SignInScreen() {
               onPress={submit}
               loading={loading}
             />
-          </Card>
 
-          <Text variant="caption" tone="muted" style={{ textAlign: 'center' }}>
-            Apple and Google sign-in coming soon.
-          </Text>
+            <View style={styles.socialRow}>
+              <Button
+                label="Apple"
+                icon="logo-apple"
+                variant="secondary"
+                size="sm"
+                fullWidth={false}
+                disabled
+                style={styles.socialButton}
+              />
+              <Button
+                label="Google"
+                icon="logo-google"
+                variant="secondary"
+                size="sm"
+                fullWidth={false}
+                disabled
+                style={styles.socialButton}
+              />
+            </View>
+          </Card>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
@@ -156,6 +182,23 @@ export default function SignInScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  hero: {
+    minHeight: 300,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  heroImage: {
+    opacity: 0.9,
+  },
+  heroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(16, 16, 16, 0.48)',
+  },
+  heroContent: {
+    minHeight: 172,
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
   segment: {
     flexDirection: 'row',
     gap: 4,
@@ -165,5 +208,12 @@ const styles = StyleSheet.create({
     minHeight: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  socialRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  socialButton: {
+    flex: 1,
   },
 });
