@@ -134,6 +134,10 @@ function AuthGate() {
           name="template-form"
           options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
         />
+        <Stack.Screen
+          name="workout-detail"
+          options={{ presentation: 'card', gestureEnabled: true }}
+        />
       </Stack>
     </>
   );
