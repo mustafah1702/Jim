@@ -11,13 +11,13 @@ export const typography = {
     fontFamily: systemFont,
     fontSize: 32,
     fontWeight: '800',
-    letterSpacing: 0,
+    letterSpacing: -0.6,
   },
   title: {
     fontFamily: systemFont,
     fontSize: 24,
     fontWeight: '700',
-    letterSpacing: 0,
+    letterSpacing: -0.3,
   },
   headline: {
     fontFamily: systemFont,

@@ -82,15 +82,13 @@ export default function HistoryScreen() {
                   style={{
                     flex: 1,
                     backgroundColor: theme.colors.surfaceElevated,
-                    borderColor: theme.colors.border,
-                    borderWidth: 1,
-                    borderRadius: theme.radius.md,
+                    borderRadius: theme.radius.lg,
                     padding: theme.spacing.md,
                     gap: theme.spacing.sm,
                   }}
                 >
                   <Skeleton width={28} height={28} borderRadius={theme.radius.sm} />
-                  <Skeleton width={48} height={22} />
+                  <Skeleton width={56} height={28} />
                   <Skeleton width={64} height={12} />
                 </View>
               ))}
@@ -101,9 +99,7 @@ export default function HistoryScreen() {
                   key={i}
                   style={{
                     backgroundColor: theme.colors.surfaceElevated,
-                    borderColor: theme.colors.border,
-                    borderWidth: 1,
-                    borderRadius: theme.radius.md,
+                    borderRadius: theme.radius.lg,
                     padding: theme.spacing.lg,
                     gap: theme.spacing.md,
                   }}
